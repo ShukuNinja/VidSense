@@ -2,6 +2,7 @@
 AUDIO_FOLDER = "data/audio"
 VIDEO_FOLDER = "data/videos"
 TRANSCRIPTS_FOLDER = "data/transcripts"
+CHUNK_FOLDER = "data/chunks"
 
 
 # FFmpeg Settings
