@@ -87,3 +87,5 @@ def save_chunks(chunks, video_title, language, output_path):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as file:
         json.dump(dataset, file, indent=4)
+    
+    return output_file
