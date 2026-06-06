@@ -1,8 +1,10 @@
+from chunker import create_chunks, parse_srt, save_chunks
 from src.audio_utils import extract_audio
 from src.transcriber import transcribe_audio
 from src.youtube_utils import get_user_input, download_clip
 import src.validators as validators
 from src.console_utils import print_header, print_success, print_error, output_file
+from src.constants import CHUNK_FOLDER
 
 def main():
 
@@ -23,7 +25,7 @@ def main():
     else:
         print_success()
     print_header("Transcribing Audio...")
-    transcript_txt_path, transcript_srt_path = transcribe_audio(audio_path)
+    transcript_txt_path, transcript_srt_path, language = transcribe_audio(audio_path)
     if not transcript_txt_path:
         print_error()
         return
@@ -31,6 +33,10 @@ def main():
         print_success()
 
     output_file(clip_path, audio_path, transcript_txt_path, transcript_srt_path)
+
+    subtitles = parse_srt(transcript_srt_path)
+    chunks = create_chunks(subtitles)
+    save_chunks(chunks, info["title"], language, CHUNK_FOLDER)
     print_header("Done")
 
 if __name__ == "__main__":
