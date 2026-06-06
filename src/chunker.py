@@ -1,3 +1,4 @@
+from file_utils import sanitize_filename
 import srt
 from datetime import timedelta
 import json
@@ -76,7 +77,7 @@ def save_chunks(chunks, video_title, language, output_path):
             "text": chunk["text"]
         })
     dataset = {
-        "video_title": video_title,
+        "video_title": sanitize_filename(video_title),
         "language" : language,
         "total_chunks" : len(chunks),
         "chunks": serializable_chunks
