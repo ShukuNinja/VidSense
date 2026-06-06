@@ -2,6 +2,7 @@ from faster_whisper import WhisperModel
 import os
 from src.constants import TRANSCRIPTS_FOLDER
 from src.file_utils import get_unique_filepath
+from src.time_utils import format_timestamp
 
 
 try:
@@ -64,7 +65,7 @@ def transcribe_audio(audio_path):
             
             txt_file.write(segment.text.strip() + "\n")        
             srt_file.write(f"{index}\n")
-            srt_file.write(f"{format_srt_timestamp(segment.start)} --> {format_srt_timestamp(segment.end)}\n")
+            srt_file.write(f"{format_srt_timestamp(segment.start)} --> {format_timestamp(segment.end)}\n")
             srt_file.write(segment.text.strip() + "\n\n")
 
     return txt_path, srt_path
