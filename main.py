@@ -1,4 +1,4 @@
-from chunker import create_chunks, parse_srt, save_chunks
+from src.chunker import create_chunks, parse_srt, save_chunks
 from src.audio_utils import extract_audio
 from src.transcriber import transcribe_audio
 from src.youtube_utils import get_user_input, download_clip
@@ -32,12 +32,22 @@ def main():
     else:
         print_success()
 
-    output_file(clip_path, audio_path, transcript_txt_path, transcript_srt_path)
+    
 
     subtitles = parse_srt(transcript_srt_path)
     chunks = create_chunks(subtitles)
-    save_chunks(chunks, info["title"], language, CHUNK_FOLDER)
-    print_header("Done")
+    chunk_json_path = save_chunks(chunks, info["title"], language, CHUNK_FOLDER)
+    if not chunk_json_path:
+        print_error()
+        return
+    else:
+        print_success()
+
+    output_file(clip_path, audio_path, transcript_txt_path, transcript_srt_path, chunk_json_path)
+
+    print_header("Chunk Generation Completed")
+
+    
 
 if __name__ == "__main__":
     main()
