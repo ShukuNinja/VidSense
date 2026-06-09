@@ -1,10 +1,12 @@
+from src.indexer import build_faiss_index, save_faiss_index
+from src.embedder import extract_texts, generate_embeddings, load_chunk_data, save_embeddings
 from src.chunker import create_chunks, parse_srt, save_chunks
 from src.audio_utils import extract_audio
 from src.transcriber import transcribe_audio
 from src.youtube_utils import get_user_input, download_clip
 import src.validators as validators
 from src.console_utils import print_header, print_success, print_error, output_file
-from src.constants import CHUNK_FOLDER
+from src.constants import CHUNK_FOLDER, EMBEDDING_BATCH_SIZE, EMBEDDINGS_FOLDER_PATH, INDEXES_FOLDER_PATH
 
 def main():
 
@@ -42,6 +44,15 @@ def main():
         return
     else:
         print_success()
+
+    chunk_data = load_chunk_data(chunk_json_path)
+    texts = extract_texts(chunk_data)
+    embeddings = generate_embeddings(texts, EMBEDDING_BATCH_SIZE)
+    embeddings_file_path = save_embeddings(embeddings, info["title"], EMBEDDINGS_FOLDER_PATH)
+    index = build_faiss_index(embeddings)
+    index_file_path = save_faiss_index(index, info["title"], INDEXES_FOLDER_PATH)
+    
+
 
     output_file(clip_path, audio_path, transcript_txt_path, transcript_srt_path, chunk_json_path)
 

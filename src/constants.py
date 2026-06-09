@@ -23,6 +23,6 @@ QUERY_INSTRUCTION = (
 )
 
 # Vector Store Paths
-VECTOR_STORE_FOLDER = "data/vector_store"
-EMBEDDINGS_FOLDER = "data/vector_store/embeddings"
-INDEXES_FOLDER = "data/vector_store/indexes"
+VECTOR_STORE_FOLDER_PATH = "data/vector_store"
+EMBEDDINGS_FOLDER_PATH = "data/vector_store/embeddings"
+INDEXES_FOLDER_PATH = "data/vector_store/indexes"

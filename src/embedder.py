@@ -1,5 +1,7 @@
 import json
+import os
 import numpy as np
+from src.file_utils import get_unique_filepath, sanitize_filename
 from sentence_transformers import SentenceTransformer
 from src.constants import EMBEDDING_MODEL, EMBEDDING_BATCH_SIZE, NORMALIZE_EMBEDDINGS
 
@@ -40,6 +42,10 @@ def generate_embeddings(texts: list[str], EMBEDDING_BATCH_SIZE) -> np.ndarray:
 
     return embeddings.astype(np.float32)
 
-def save_embeddings(embeddings: np.ndarray, embeddings_file_path: str):
+def save_embeddings(embeddings: np.ndarray, video_title: str, EMBEDDINGS_FOLDER_PATH):
+    embeddings_file_name = sanitize_filename(video_title)
+    embeddings_file_path = get_unique_filepath(embeddings_file_name, EMBEDDINGS_FOLDER_PATH, ".npy")
+    os.makedirs(EMBEDDINGS_FOLDER_PATH, exist_ok=True)
     np.save(embeddings_file_path, embeddings)
+    
     return embeddings_file_path
