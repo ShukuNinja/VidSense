@@ -5,6 +5,9 @@ venv/
 # Python
 __pycache__/
 *.pyc
+*.faiss
+*.index
+*.npy
 
 # Output Files
 data/videos/
