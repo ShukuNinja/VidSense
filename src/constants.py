@@ -18,7 +18,7 @@ EMBEDDING_BATCH_SIZE = 32
 NORMALIZE_EMBEDDINGS = True
 
 # Query Embedding Instruction
-QUERY_INSTRUCTION = (
+INSTRUCTION = (
     "Represent this sentence for searching relevant passages: "
 )
 
@@ -26,3 +26,118 @@ QUERY_INSTRUCTION = (
 VECTOR_STORE_FOLDER_PATH = "data/vector_store"
 EMBEDDINGS_FOLDER_PATH = "data/vector_store/embeddings"
 INDEXES_FOLDER_PATH = "data/vector_store/indexes"
+
+# Retrieval Settings
+DEFAULT_TOP_K = 20
+WINDOW_SIZE = 1
+ALPHA = 0.85
+ABSOLUTE_SCORE_THRESHOLD = 0.6
+
+#Retrieval evaluation report
+RETRIEVAL_RESULTS_FOLDER = "data/retrieval_results"
+RETRIEVAL_TEST_QUERIES = [
+    # Exact Match
+    "Who developed Java?",
+    "What is JVM?",
+    "What is JRE?",
+    "What is JDK?",
+    "What is bytecode?",
+    "What is JShell?",
+    "What is a variable?",
+    "What is a compiler?",
+    "What is a class?",
+    "What is a method?",
+
+    # Semantic Paraphrase
+    "Who is responsible for creating Java?",
+    "Who owns Java now?",
+    "Why is Java platform independent?",
+    "Why can Java run on multiple operating systems?",
+    "What converts Java code into machine readable form?",
+    "What software executes Java programs?",
+    "Why do developers need JDK?",
+    "What is the purpose of JShell?",
+    "Why is Java popular in companies?",
+    "Why is Java considered maintainable?",
+
+    # Multi-Hop
+    "How does Java code reach the JVM?",
+    "What is the relationship between JDK JRE and JVM?",
+    "Why do developers need JDK while users only need JRE?",
+    "How does Java achieve Write Once Run Anywhere?",
+    "What happens when javac compiles a Java file?",
+    "How does a Java program start executing?",
+
+    # Concept Expansion
+    "Explain the Java execution flow.",
+    "Explain Java architecture.",
+    "How does Java run internally?",
+    "How are Java applications executed?",
+    "Describe the lifecycle of a Java program.",
+    "What happens behind the scenes when Java code runs?",
+
+    # Chunk Boundary Tests
+    "Why do we need public static void main?",
+    "What is the main method signature?",
+    "Why does Java require a class?",
+    "What is the difference between JShell and Java files?",
+    "Why do we compile before running?",
+    "What is generated after compilation?",
+
+    # Similar Concept Tests
+    "Difference between JVM and JDK",
+    "Difference between JDK and JRE",
+    "Difference between print and println",
+    "Difference between byte and int",
+    "Difference between float and double",
+    "Difference between class and object",
+
+    # Data Type Tests
+    "What are primitive data types?",
+    "What is an integer data type?",
+    "What is a float?",
+    "What is a double?",
+    "What is a boolean?",
+    "What is a character data type?",
+    "Why does float require an f suffix?",
+    "Why does long require an l suffix?",
+    "What is the range of a byte?",
+    "What is the range of an int?",
+
+    # Stress Tests
+    "Who created Java and who owns it now?",
+    "Why is Java called Write Once Run Anywhere?",
+    "How does bytecode help Java become platform independent?",
+    "How are variables used during processing?",
+    "Why does JVM require bytecode instead of Java source code?",
+    "How does a programmer code reach the operating system?",
+
+    # Negative Tests
+    "What is the color of the shirt?",
+    "Who is the president of India?",
+    "What is ReactJS?",
+    "How do neural networks work?",
+    "What is Kubernetes?",
+    "How do airplanes fly?",
+    "What is quantum computing?"
+]
+
+SANITY_TEST_QUERIES = [
+    "Who developed Java?",
+    "Who is responsible for creating Java?",
+    "What is Kubernetes?",
+    "How does Java achieve Write Once Run Anywhere?"
+]
+
+GOLDEN_QUERIES = [
+    "Who developed Java?",
+    "What is JVM?",
+    "What is JDK?",
+    "What is JRE?",
+    "Why is Java platform independent?",
+    "How does Java achieve Write Once Run Anywhere?",
+    "What is bytecode?",
+    "How does Java code reach the JVM?",
+    "Difference between JDK and JRE",
+    "What is Kubernetes?"
+]
