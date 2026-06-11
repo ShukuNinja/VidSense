@@ -25,9 +25,8 @@ def region_grower(array):
 def build_context(retrieved_chunks):
     evidence = {"regions": [], "sources": []}
     chunk_ids = []
-
-    for chunk in retrieved_chunks:
-        chunk_ids.append(chunk["chunk_id"])
+    
+    chunk_ids = [chunk["chunk_id"] for chunk in retrieved_chunks]
 
     chunk_lookup = {chunk["chunk_id"]: chunk for chunk in retrieved_chunks}
 
@@ -35,11 +34,18 @@ def build_context(retrieved_chunks):
 
     regions = region_grower(chunk_ids)
 
+    region_id = 0
+
     while region_id < len(regions):
 
         current_region = regions [region_id]
 
-        region_dict = {"region_id": None, "chunks": []}
+        region_dict = {"region_id": region_id, 
+        "start_chunk": current_region[0],
+        "end_chunk": current_region[-1],
+        "start_time": chunk_lookup[current_region[0]]["start_time"],
+        "end_time": chunk_lookup[current_region[-1]]["end_time"],
+        "chunks": []}
 
         j = 0
 
@@ -49,7 +55,6 @@ def build_context(retrieved_chunks):
             if chunk_id in chunk_lookup:
                 chunk = dict(chunk_lookup[chunk_id])
                 region_dict["chunks"].append(chunk)
-                evidence["sources"].append(chunk)
 
             j += 1
 
@@ -58,6 +63,55 @@ def build_context(retrieved_chunks):
 
     evidence["sources"] = retrieved_chunks
 
-    return evidence
+    return evidence    
 
-    
+
+def render_context(evidence):
+
+    context = ""
+
+    regions = evidence["regions"]
+
+    i = 0
+
+    while i < len(regions):
+
+        region = regions[i]
+        chunks = region["chunks"]
+
+        if len(chunks) == 0:
+            i += 1
+            continue
+
+        region_start = region["start_time"]
+        region_end = region["end_time"]
+
+        context += (
+            f"\n=== REGION {region['region_id']} ===\n"
+        )
+
+        context += (
+            f"Time: {region_start} -> {region_end}\n\n"
+        )
+
+        j = 0
+
+        while j < len(chunks):
+
+            chunk = chunks[j]
+
+            context += (
+                f"[{chunk['chunk_id']}]\n"
+            )
+
+            context += (
+                chunk["text"].strip()
+            )
+
+            context += "\n\n"
+
+            j += 1
+
+        i += 1
+
+    return context.strip()
