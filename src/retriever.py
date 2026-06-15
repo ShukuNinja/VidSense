@@ -55,30 +55,14 @@ def filter_results(scores: np.ndarray, indices: np.ndarray):
 
     return filtered_scores, filtered_indices
 
-def expand_context(filtered_indices: np.ndarray, chunk_data: dict) -> np.ndarray:
-    expanded_indices = set()
-    total_chunks = len(chunk_data["chunks"])
-
-    for index in filtered_indices:
-        expanded_indices.add(index)
-
-        for i in range(1, WINDOW_SIZE + 1):
-            if index + i < total_chunks:
-                expanded_indices.add(index + i)
-            if index - i >= 0:
-                expanded_indices.add(index - i)
-    expanded_indices = sorted(expanded_indices)       
-    return np.array(expanded_indices)
-
-def retrieve_chunks(expanded_indices: np.ndarray, 
-                    chunk_data: dict, 
+def retrieve_chunks(chunk_data: dict, 
                     filtered_scores: np.ndarray,
                     filtered_indices: np.ndarray) -> list[dict]:
     
     score_lookup ={index: score for index, score in zip(filtered_indices, filtered_scores)}
 
     retrieved_chunks = []
-    for chunk_id in expanded_indices:
+    for chunk_id in filtered_indices:
         retrieved_chunk = {}
         chunk = chunk_data["chunks"][chunk_id]
         retrieved_chunk ["chunk_id"] = chunk["chunk_id"]
