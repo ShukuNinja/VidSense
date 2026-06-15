@@ -141,3 +141,12 @@ GOLDEN_QUERIES = [
     "Difference between JDK and JRE",
     "What is Kubernetes?"
 ]
+
+# LLM Settings
+NO_EVIDENCE_RESPONSE = (
+    "The video does not provide "
+    "information relevant to this question."
+)
+
+MODEL_NAME = "qwen3:8b"
+
