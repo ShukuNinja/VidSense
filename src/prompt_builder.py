@@ -40,9 +40,8 @@ def build_prompt(query, evidence):
                 rendered_context)
     prompt = {"system": system_prompt, 
             "user": user_prompt}
+    
     print("Original length:", len(prompt["user"]))
-
-    prompt["user"] = prompt["user"][:5000]
 
     print("Final length:", len(prompt["user"]))
     
