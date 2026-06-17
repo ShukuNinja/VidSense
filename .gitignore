@@ -17,6 +17,8 @@ data/chunks/
 data/vector_store/
 data/vector_store/embeddings/
 data/vector_store/indexes/
+data/retrieval_results/
+data/
 
 # IDE
 .vscode/
