@@ -1,4 +1,4 @@
-from src.context_builder import render_context
+from src.context_builder import render_compressed_context
 
 
 def build_system_prompt():
@@ -32,8 +32,8 @@ def build_user_prompt(query, rendered_context):
     Question: {query}
     """
 
-def build_prompt(query, evidence):
-    rendered_context = render_context(evidence)
+def build_prompt(query, compressed_evidence):
+    rendered_context = render_compressed_context(compressed_evidence)
     system_prompt = build_system_prompt()
     user_prompt = build_user_prompt(
                 query, 

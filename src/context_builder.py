@@ -66,52 +66,20 @@ def build_context(retrieved_chunks):
     return evidence    
 
 
-def render_context(evidence):
+def render_compressed_context(
+    compressed_evidence
+):
 
     context = ""
 
-    regions = evidence["regions"]
-
-    i = 0
-
-    while i < len(regions):
-
-        region = regions[i]
-        chunks = region["chunks"]
-
-        if len(chunks) == 0:
-            i += 1
-            continue
-
-        region_start = region["start_time"]
-        region_end = region["end_time"]
+    for region in compressed_evidence["regions"]:
 
         context += (
             f"\n=== REGION {region['region_id']} ===\n"
         )
 
         context += (
-            f"Time: {region_start} -> {region_end}\n\n"
+            f"{region['text']}\n\n"
         )
-
-        j = 0
-
-        while j < len(chunks):
-
-            chunk = chunks[j]
-
-            context += (
-                f"[{chunk['chunk_id']}]\n"
-            )
-
-            context += (
-                chunk["text"].strip()
-            )
-
-            context += "\n\n"
-
-            j += 1
-
-        i += 1
 
     return context.strip()
