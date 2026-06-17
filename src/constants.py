@@ -142,6 +142,14 @@ GOLDEN_QUERIES = [
     "What is Kubernetes?"
 ]
 
+EVALUATION_QUERIES = [
+    "What is JVM?",
+    "Explain JVM, JRE and JDK.",
+    "Summarize everything about JVM.",
+    "How does Java execution work?",
+    "Why is Java platform independent?"
+]
+
 # LLM Settings
 NO_EVIDENCE_RESPONSE = (
     "The video does not provide "
@@ -150,3 +158,6 @@ NO_EVIDENCE_RESPONSE = (
 
 MODEL_NAME = "qwen3:8b"
 
+#Compression Settings
+SIMILARITY_THRESHOLD = 0.60
+DENSITY_THRESHOLD = 0.5
