@@ -1,0 +1,5 @@
+# Web backend dependencies (Phase 1). Install alongside requirements.txt:
+#   pip install -r requirements-backend.txt
+fastapi>=0.110
+uvicorn[standard]>=0.27
+sqlalchemy>=2.0

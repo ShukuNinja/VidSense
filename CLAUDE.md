@@ -119,7 +119,39 @@ Loop repeats until the user types `exit`/`quit`.
 | `MAX_HISTORY_TURNS` | `6` | conversation turns remembered |
 
 ## Data layout (all under `data/`, git-ignored)
-`videos/` · `audio/` · `transcripts/` · `chunks/` · `vector_store/{embeddings,indexes}/`
+`videos/` · `audio/` · `transcripts/` · `chunks/` · `vector_store/{embeddings,indexes}/` ·
+`vidsense.db` (SQLite, web backend)
+
+## Web backend (`backend/`, FastAPI — Phase 1)
+
+Local single-user API over the `src/pipeline.py` service layer. A **chat = one ingested
+clip + its messages**.
+
+```bash
+pip install -r requirements-backend.txt
+uvicorn backend.app:app --reload      # from the repo root; needs Ollama running
+```
+
+- **Persistence:** SQLite (`data/vidsense.db`) via SQLAlchemy — `chats` + `messages`.
+  FAISS index / chunk JSON stay on disk; the chat row references their paths.
+- **Ingestion:** `POST /api/chats` validates input, creates a `pending` chat, and runs
+  ingestion on a single-worker `ThreadPoolExecutor` (serialized so only one Whisper job
+  runs at a time). Progress is published to a `JobRegistry` and streamed via SSE at
+  `GET /api/chats/{id}/ingest/stream` (`download → audio → transcribe → chunk → index`).
+- **Messaging:** `POST /api/chats/{id}/messages` persists the user turn, then **streams**
+  the answer as SSE events `meta → token* → done → saved`; the assistant message + citations
+  are persisted after the stream. Token streaming uses `generator.stream_llm` /
+  `pipeline.stream_answer_question` (`ollama.chat(stream=True)`).
+- **History:** rebuilt per turn from stored messages, segment-aware
+  (`services.build_history`) so it mirrors the CLI's reset-on-new-topic.
+- **Caches:** `services.cache` (LRU by `chat_id`) keeps loaded FAISS index + chunks warm.
+- **Endpoints:** `GET/POST /api/chats`, `GET/PATCH/DELETE /api/chats/{id}`,
+  `GET /api/chats/{id}/ingest/stream`, `POST /api/chats/{id}/messages`, `GET /api/health`.
+- **Errors:** `PipelineError` → HTTP 400 (create) or `failed` chat status (ingestion);
+  a mid-stream model failure emits an SSE `{"type":"error"}` frame instead of crashing.
+
+Streaming routes are sync generators, so Starlette runs the blocking Ollama/embedding
+calls in its threadpool (they don't block the event loop).
 
 ## Notes
-- `test.py` is throwaway scratch (git-ignored) with hard-coded paths — **not** the app entry point. Use `main.py`.
+- `test.py` is throwaway scratch (git-ignored) with hard-coded paths — **not** the app entry point. Use `main.py` (CLI) or the FastAPI backend.

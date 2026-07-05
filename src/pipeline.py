@@ -24,7 +24,7 @@ from src.indexer import build_faiss_index, save_faiss_index
 from src.retriever import embed_query, search_index, filter_results, retrieve_chunks
 from src.context_builder import build_context
 from src.context_compressor import text_extraction, process_regions, compress_evidence
-from src.generator import generate_answer
+from src.generator import generate_answer, stream_answer
 from src.conversation import contextualize_query
 from src.console_utils import print_header, print_success
 from src.constants import (
@@ -123,12 +123,16 @@ def ingest_video(info, start_time, end_time, stream_url, reporter=None) -> Inges
     )
 
 
-def run_rag(query, search_query, chunk_data, index, history=None) -> dict:
-    """Retrieval -> expansion -> compression -> grounded generation for one query.
+def build_answer_context(query, history, index, chunk_data) -> dict:
+    """Everything up to (but not including) generation for one turn.
 
-    `search_query` drives retrieval/scoring (a standalone rewrite for follow-ups);
-    `query` is the user's original phrasing shown to the model.
+    Decides follow-up vs new topic, then runs retrieval -> expansion ->
+    compression. Returns the compressed evidence plus the metadata both the
+    blocking and streaming answer paths need.
     """
+    search_query, is_followup = contextualize_query(query, history)
+    effective_history = history if is_followup else None
+
     query_embedding = embed_query(search_query)
 
     scores, indices = search_index(query_embedding, index, DEFAULT_TOP_K)
@@ -141,22 +145,65 @@ def run_rag(query, search_query, chunk_data, index, history=None) -> dict:
     evidence = process_regions(evidence, query_embedding[0])
     compressed_evidence = compress_evidence(evidence)
 
-    return generate_answer(query, compressed_evidence, history=history)
+    return {
+        "search_query": search_query,
+        "is_followup": is_followup,
+        "effective_history": effective_history,
+        "compressed_evidence": compressed_evidence,
+    }
+
+
+def citations_from(compressed_evidence) -> list:
+    """Compact citation list (region id + clip-relative time span) for the UI."""
+    return [
+        {
+            "region_id": region["region_id"],
+            "start_time": region["start_time"],
+            "end_time": region["end_time"],
+        }
+        for region in compressed_evidence.get("regions", [])
+    ]
 
 
 def answer_question(query, history, index, chunk_data) -> dict:
-    """Answer one turn: decide follow-up vs new topic, then run the RAG pipeline.
+    """Answer one turn (blocking). Returns the generator result augmented with
+    `is_followup` and the `search_query` used for retrieval. The caller owns
+    history state (e.g. whether to reset it when is_followup is False)."""
+    ctx = build_answer_context(query, history, index, chunk_data)
 
-    `history` is a list of {"query", "answer"} dicts (empty for the first turn).
-    The returned dict is the generator result augmented with `is_followup` and the
-    `search_query` actually used for retrieval. The caller owns history state
-    (e.g. whether to reset it when is_followup is False).
-    """
-    search_query, is_followup = contextualize_query(query, history)
-    effective_history = history if is_followup else None
-
-    result = run_rag(query, search_query, chunk_data, index, history=effective_history)
-    result["is_followup"] = is_followup
-    result["search_query"] = search_query
+    result = generate_answer(
+        query, ctx["compressed_evidence"], history=ctx["effective_history"]
+    )
+    result["is_followup"] = ctx["is_followup"]
+    result["search_query"] = ctx["search_query"]
 
     return result
+
+
+def stream_answer_question(query, history, index, chunk_data):
+    """Answer one turn as a stream of events.
+
+    Yields, in order: one {"type":"meta", ...}, many {"type":"token","text":...},
+    then one {"type":"done", "answer", "is_followup", "citations"}.
+    """
+    ctx = build_answer_context(query, history, index, chunk_data)
+
+    yield {
+        "type": "meta",
+        "is_followup": ctx["is_followup"],
+        "search_query": ctx["search_query"],
+    }
+
+    parts = []
+    for piece in stream_answer(
+        query, ctx["compressed_evidence"], history=ctx["effective_history"]
+    ):
+        parts.append(piece)
+        yield {"type": "token", "text": piece}
+
+    yield {
+        "type": "done",
+        "answer": "".join(parts),
+        "is_followup": ctx["is_followup"],
+        "citations": citations_from(ctx["compressed_evidence"]),
+    }

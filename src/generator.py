@@ -3,8 +3,8 @@ import ollama
 from src.prompt_builder import build_prompt
 from src.constants import MODEL_NAME, NO_EVIDENCE_RESPONSE, MAX_HISTORY_TURNS
 
-def call_llm(system_prompt, user_prompt, history=None):
 
+def _build_messages(system_prompt, user_prompt, history=None):
     messages = [
         {
             "role" : "system",
@@ -23,13 +23,44 @@ def call_llm(system_prompt, user_prompt, history=None):
         "content" : user_prompt
     })
 
+    return messages
+
+
+def call_llm(system_prompt, user_prompt, history=None):
     response = ollama.chat(
         model = MODEL_NAME,
-        messages = messages
+        messages = _build_messages(system_prompt, user_prompt, history)
     )
 
     return response["message"]["content"]
-    
+
+
+def stream_llm(system_prompt, user_prompt, history=None):
+    """Yield answer text deltas as Ollama generates them."""
+    for chunk in ollama.chat(
+        model = MODEL_NAME,
+        messages = _build_messages(system_prompt, user_prompt, history),
+        stream = True,
+    ):
+        piece = chunk.get("message", {}).get("content", "")
+        if piece:
+            yield piece
+
+
+def stream_answer(query, evidence, history=None):
+    """Stream a grounded answer token-by-token.
+
+    Mirrors generate_answer: with no evidence it yields the canned no-evidence
+    line (no model call); otherwise it streams the model's tokens.
+    """
+    if len(evidence["regions"]) == 0:
+        yield NO_EVIDENCE_RESPONSE
+        return
+
+    prompts = build_prompt(query, evidence)
+    yield from stream_llm(prompts["system"], prompts["user"], history=history)
+
+
 
 def generate_answer(query, evidence, history=None):
     if len(evidence["regions"]) == 0:
