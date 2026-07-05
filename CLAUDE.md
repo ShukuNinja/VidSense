@@ -26,7 +26,9 @@ yt-dlp, ollama, srt, numpy, …). First run downloads the Whisper `medium` model
 
 ## Architecture
 
-The app is **two pipelines run back-to-back**, orchestrated by `main.py`.
+The core logic lives in **`src/pipeline.py`** as a stdout-free, importable service layer
+(`ingest_video()`, `answer_question()`); `main.py` is a thin CLI wrapper over it, and the
+web backend calls the same functions. The app is **two pipelines run back-to-back**.
 
 ### Pipeline A — Ingestion (`ingest_clip()` → returns `(chunk_data, index)` in memory)
 ```
@@ -43,7 +45,7 @@ get_user_input()      validate URL + timestamps, resolve stream URL (yt_dlp)
 Confirms Ollama is reachable and `MODEL_NAME` is available. On failure the built index is
 preserved and the app exits cleanly instead of crashing at generation time.
 
-### Pipeline B — Conversational Q&A (`question_loop()` → `answer_query()`)
+### Pipeline B — Conversational Q&A (`answer_question()` in `src/pipeline.py`)
 Per question:
 ```
 contextualize_query()   LLM decides FOLLOW-UP vs NEW topic (src/conversation.py):
@@ -61,7 +63,8 @@ Loop repeats until the user types `exit`/`quit`.
 
 | Module | Responsibility |
 |---|---|
-| `youtube_utils.py` | User input, video info, stream-URL resolution, `download_clip` |
+| `pipeline.py` | **Service layer**: `ingest_video()`, `answer_question()`, `ProgressReporter`/`ConsoleReporter`, `IngestResult` — stdout-free, called by both CLI and web backend |
+| `youtube_utils.py` | `prepare_source()` (non-interactive validate+resolve), `get_user_input` (CLI), video info, `download_clip` |
 | `ffmpeg_utils.py` | `create_clip` (returns success bool from ffmpeg exit code) |
 | `audio_utils.py` | `extract_audio` (format from `DEFAULT_AUDIO_FORMAT`) |
 | `transcriber.py` | faster-whisper transcription; **lazy** `get_model()` cache |

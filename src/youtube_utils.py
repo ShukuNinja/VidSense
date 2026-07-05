@@ -59,22 +59,24 @@ def get_stream_url(info):
 def get_video_duration(info):
     return info.get("duration")
 
-def get_user_input():
+def prepare_source(url, start_time, end_time):
+    """Validate inputs and resolve video info + stream URL without any prompting.
 
-    url = input ("Enter the YouTube URL: ")
+    This is the non-interactive core shared by the CLI (get_user_input) and the
+    web backend. Raises PipelineError (via validators.fail) on any invalid input
+    or resolution failure.
+    """
     if not validators.validate_url(url):
         validators.fail("INVALID URL. Please enter a valid YouTube URL.")
 
     try:
         info = get_video_info(url)
-    except Exception as e:
+    except Exception:
         validators.fail("Error occurred while fetching video info.")
 
-    start_time = input("Enter Start Time (HH:MM:SS): ")
     if not validators.validate_timestamp(start_time):
         validators.fail("INVALID START TIME. Please enter a valid timestamp in HH:MM:SS format.")
 
-    end_time = input("Enter End Time (HH:MM:SS): ")
     if not validators.validate_timestamp(end_time):
         validators.fail("INVALID END TIME. Please enter a valid timestamp in HH:MM:SS format.")
 
@@ -83,7 +85,7 @@ def get_user_input():
 
     video_duration = get_video_duration(info)
 
-    if not (validators.valid_video_duration(start_time, end_time, video_duration)):
+    if not validators.valid_video_duration(start_time, end_time, video_duration):
         validators.fail("GIVEN TIME RANGE DOES NOT BELONG TO THE VIDEO DURATION.")
 
     stream_url = get_stream_url(info)
@@ -92,6 +94,14 @@ def get_user_input():
         validators.fail("STREAM URL NOT FOUND.")
 
     return info, start_time, end_time, stream_url
+
+
+def get_user_input():
+    url = input("Enter the YouTube URL: ")
+    start_time = input("Enter Start Time (HH:MM:SS): ")
+    end_time = input("Enter End Time (HH:MM:SS): ")
+
+    return prepare_source(url, start_time, end_time)
 
 def download_clip(info,start_time, end_time,stream_url):
     clip_path = get_unique_filepath(get_video_title(info), VIDEO_FOLDER, ".mp4")
