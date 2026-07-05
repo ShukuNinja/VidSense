@@ -20,15 +20,21 @@ Only expose it on a trusted network / behind a VPN, or add auth first.
 ## Run it
 
 ```bash
+cp .env.example .env        # then edit: set VIDSENSE_SECRET (and DOMAIN for a real host)
 docker compose up -d --build
 ```
 
-That's it. On first boot the `app` container waits for Ollama, pulls the model
-(`VIDSENSE_MODEL`), then starts serving. Open:
+Three services come up: `ollama` (LLM/GPU), `app` (API + SPA), and `caddy`
+(reverse proxy + automatic HTTPS). On first boot `app` waits for Ollama, pulls the
+model, then serves. Open:
 
-```
-http://<host>:8000
-```
+- **Local test:** `https://localhost` (Caddy uses a local CA, so accept the browser
+  warning once).
+- **Real host:** set `DOMAIN=your.domain` in `.env`, point its DNS A-record at the
+  host, open ports 80/443 → `https://your.domain` gets an automatic Let's Encrypt cert.
+
+The `app` container isn't published to the host directly — all traffic goes through
+Caddy on 80/443.
 
 Follow logs / check status:
 
@@ -52,6 +58,7 @@ docker compose up -d --build        # rebuild after code changes
 | `OLLAMA_HOST` | `http://ollama:11434` | where the app reaches Ollama |
 | `FRONTEND_DIST` | `/app/frontend/dist` | built SPA served by the backend |
 | `VIDSENSE_SECRET` | dev placeholder | **JWT signing secret — set a long random value in production** (`openssl rand -hex 32`). Changing it signs everyone out. |
+| `DOMAIN` | `localhost` | Caddy's site address. A real domain → automatic Let's Encrypt HTTPS; `localhost` → local self-signed cert. |
 
 The app is **multi-user**: each visitor registers/logs in and only sees their own
 chats. Set a strong `VIDSENSE_SECRET` (e.g. via a `.env` file next to
@@ -83,5 +90,6 @@ Both survive `docker compose down`. Use `docker compose down -v` to wipe them.
   clips. For GPU transcription you'd need a CUDA base image for the `app` service.
 - **Windows/macOS hosts:** GPU passthrough to containers is limited; a Linux host with
   the NVIDIA Container Toolkit is recommended for production.
-- **HTTPS / remote access:** put a reverse proxy (Caddy/nginx) in front of port 8000
-  for TLS if exposing beyond localhost.
+- **HTTPS:** handled by the built-in `caddy` service (automatic certs). No extra proxy
+  needed. There's still no rate-limiting — add abuse protection before public exposure,
+  since ingestion is compute-heavy.

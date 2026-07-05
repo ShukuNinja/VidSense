@@ -201,9 +201,11 @@ npm run dev          # http://localhost:5173 ; proxies /api -> 127.0.0.1:8000
 
 ## Deployment (`Dockerfile`, `docker-compose.yml`, `DEPLOY.md`)
 
-Containerized as two services: **`ollama`** (LLM on GPU) and **`app`** (FastAPI serving
-API + built SPA, CPU — Whisper/embeddings run on CPU there). One command:
-`docker compose up -d --build` → open `http://<host>:8000`. Still single-user (no auth).
+Containerized as three services: **`ollama`** (LLM on GPU), **`app`** (FastAPI serving
+API + built SPA, CPU), and **`caddy`** (reverse proxy + automatic HTTPS). One command:
+`cp .env.example .env` then `docker compose up -d --build` → open `https://localhost`
+(or your `DOMAIN`). `app` isn't published to the host — traffic goes through Caddy on
+80/443. Multi-user (email/password auth).
 
 - The backend **serves the built frontend** when `FRONTEND_DIST` points at a real `dist/`
   (mounted at `/` after the `/api` routes); in dev that dir is absent and Vite serves it.

@@ -31,10 +31,30 @@ services:
       VIDSENSE_SECRET: ${VIDSENSE_SECRET:-dev-insecure-secret-change-me-in-production-0000}
     volumes:
       - vidsense-data:/app/data
+    # Not published to the host — reached only through the caddy proxy below.
+    # (Add `ports: ["8000:8000"]` temporarily to hit the API directly for debugging.)
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    container_name: vidsense-caddy
+    depends_on:
+      - app
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
     restart: unless-stopped
 
 volumes:
   ollama-models:   # pulled models persist here
   vidsense-data:   # clips, transcripts, indexes, SQLite DB
+  caddy-data:      # TLS certificates
+  caddy-config:

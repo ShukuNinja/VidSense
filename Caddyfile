@@ -1,0 +1,13 @@
+# Reverse proxy + automatic HTTPS in front of the app.
+#
+# DOMAIN=localhost (default) -> Caddy serves https://localhost with its own local
+#   CA (browser will warn; fine for testing).
+# DOMAIN=vidsense.example.com -> Caddy auto-provisions a Let's Encrypt certificate
+#   (requires public DNS pointing at this host and ports 80/443 reachable).
+{$DOMAIN:localhost} {
+	# flush_interval -1 disables response buffering so SSE token/progress streams
+	# reach the browser immediately.
+	reverse_proxy app:8000 {
+		flush_interval -1
+	}
+}
