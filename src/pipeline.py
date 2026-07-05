@@ -25,7 +25,7 @@ from src.retriever import embed_query, search_index, filter_results, retrieve_ch
 from src.context_builder import build_context
 from src.context_compressor import text_extraction, process_regions, compress_evidence
 from src.generator import generate_answer, stream_answer
-from src.conversation import contextualize_query
+from src.conversation import contextualize_query, is_summary_question
 from src.console_utils import print_header, print_success
 from src.constants import (
     CHUNK_FOLDER,
@@ -123,31 +123,57 @@ def ingest_video(info, start_time, end_time, stream_url, reporter=None) -> Inges
     )
 
 
+def full_clip_evidence(chunk_data) -> dict:
+    """Whole-clip evidence (full text, no similarity filtering).
+
+    Summary/overview questions ("what is this clip about?") don't match any
+    single chunk by similarity, so answer them from the entire clip instead.
+    Clips are short scoped segments, so this stays small.
+    """
+    chunks = chunk_data.get("chunks", [])
+    if not chunks:
+        return {"regions": []}
+
+    region = {
+        "region_id": 0,
+        "start_time": chunks[0]["start_time"],
+        "end_time": chunks[-1]["end_time"],
+        "mode": "full",
+        "text": " ".join(chunk["text"] for chunk in chunks),
+    }
+    return {"regions": [region]}
+
+
 def build_answer_context(query, history, index, chunk_data) -> dict:
     """Everything up to (but not including) generation for one turn.
 
-    Decides follow-up vs new topic, then runs retrieval -> expansion ->
-    compression. Returns the compressed evidence plus the metadata both the
-    blocking and streaming answer paths need.
+    Decides follow-up vs new topic; summary/overview questions use the whole
+    clip, everything else runs retrieval -> expansion -> compression. Returns
+    the evidence plus the metadata both answer paths need.
     """
     search_query, is_followup = contextualize_query(query, history)
     effective_history = history if is_followup else None
+    summary = is_summary_question(query)
 
-    query_embedding = embed_query(search_query)
+    if summary:
+        compressed_evidence = full_clip_evidence(chunk_data)
+    else:
+        query_embedding = embed_query(search_query)
 
-    scores, indices = search_index(query_embedding, index, DEFAULT_TOP_K)
-    filtered_scores, filtered_indices = filter_results(scores, indices)
-    retrieved_chunks = retrieve_chunks(chunk_data, filtered_scores, filtered_indices)
+        scores, indices = search_index(query_embedding, index, DEFAULT_TOP_K)
+        filtered_scores, filtered_indices = filter_results(scores, indices)
+        retrieved_chunks = retrieve_chunks(chunk_data, filtered_scores, filtered_indices)
 
-    evidence = build_context(retrieved_chunks)
-    evidence = text_extraction(evidence)
-    # process_regions needs the 1-D query vector, not the (1, dim) batch.
-    evidence = process_regions(evidence, query_embedding[0])
-    compressed_evidence = compress_evidence(evidence)
+        evidence = build_context(retrieved_chunks)
+        evidence = text_extraction(evidence)
+        # process_regions needs the 1-D query vector, not the (1, dim) batch.
+        evidence = process_regions(evidence, query_embedding[0])
+        compressed_evidence = compress_evidence(evidence)
 
     return {
         "search_query": search_query,
         "is_followup": is_followup,
+        "is_summary": summary,
         "effective_history": effective_history,
         "compressed_evidence": compressed_evidence,
     }
@@ -175,6 +201,7 @@ def answer_question(query, history, index, chunk_data) -> dict:
         query, ctx["compressed_evidence"], history=ctx["effective_history"]
     )
     result["is_followup"] = ctx["is_followup"]
+    result["is_summary"] = ctx["is_summary"]
     result["search_query"] = ctx["search_query"]
 
     return result
@@ -191,6 +218,7 @@ def stream_answer_question(query, history, index, chunk_data):
     yield {
         "type": "meta",
         "is_followup": ctx["is_followup"],
+        "is_summary": ctx["is_summary"],
         "search_query": ctx["search_query"],
     }
 

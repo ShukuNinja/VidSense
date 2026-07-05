@@ -108,6 +108,10 @@ Loop repeats until the user types `exit`/`quit`.
   — and is injected into the system prompt, so the code path and the LLM instruction stay in sync.
 - **Unique artifact paths:** index, embeddings, **and chunks** all use `get_unique_filepath`,
   so multiple chats from the same video never overwrite each other's data.
+- **Summary questions:** whole-clip/overview questions (`conversation.is_summary_question`)
+  bypass similarity retrieval and answer from the **entire clip**
+  (`pipeline.full_clip_evidence`) — similarity search can't match "what is this about?".
+  Specific questions keep the normal retrieval + strict-refusal path.
 - **Ollama resilience:** all chat calls go through `ollama_manager.chat_with_retry`
   (`OLLAMA_MAX_ATTEMPTS`), which retries the transient CUDA cold-load crash. Streaming
   (`stream_llm`) retries only **before the first token** so output is never duplicated.

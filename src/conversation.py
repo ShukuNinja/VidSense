@@ -3,6 +3,30 @@ import re
 from src.ollama_manager import chat_with_retry
 from src.constants import MODEL_NAME, MAX_HISTORY_TURNS
 
+# Whole-clip / overview questions that similarity search can't retrieve (they
+# aren't about any single chunk). Detected so they can be answered from the
+# entire clip instead of returning no-evidence.
+_SUMMARY_KEYWORDS = (
+    "summar", "overview", "recap", "rundown", "the gist",
+    "main point", "key point", "key takeaway", "main idea",
+)
+_SUMMARY_PATTERNS = (
+    # "what ... discussed / topics / covered / about"
+    re.compile(r"\bwhat.*\b(discuss\w*|topics?|cover\w*|about)\b", re.IGNORECASE),
+    # "what ... (this) clip / video / section ..."
+    re.compile(r"\bwhat.*\b(clip\w*|video|section|part|segment)\b", re.IGNORECASE),
+    re.compile(r"\btell me about\b.*\b(this|the|it|clip|video)\b", re.IGNORECASE),
+    re.compile(r"\bgive\b.*\b(summary|overview|rundown|gist|idea)\b", re.IGNORECASE),
+)
+
+
+def is_summary_question(query):
+    """True if the question is about the clip as a whole (summary/overview)."""
+    text = (query or "").lower()
+    if any(keyword in text for keyword in _SUMMARY_KEYWORDS):
+        return True
+    return any(pattern.search(text) for pattern in _SUMMARY_PATTERNS)
+
 CONTEXTUALIZE_SYSTEM = """You reformulate a user's latest question for a video Q&A system.
 
 You are given the recent conversation and the user's latest question.
