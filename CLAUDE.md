@@ -92,6 +92,8 @@ Loop repeats until the user types `exit`/`quit`.
 - **Retrieval query vs. display query:** `answer_query(query, search_query, …)` retrieves
   and sentence-scores on `search_query` (the standalone rewrite for follow-ups) but shows
   the model the user's original `query`.
+- **`search_index` clamps `top_k` to `index.ntotal`** so FAISS never pads results with
+  sentinel scores (which otherwise pollute `filter_results` and warn on tiny indexes).
 - **Pipeline order matters:** `text_extraction` (creates `sentences`) must run **before**
   `process_regions` (adds `scored_sentences`), which must run before `compress_evidence`
   (needs both). `process_regions` takes the **1-D** vector `query_embedding[0]`, not the
