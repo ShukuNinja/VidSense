@@ -18,7 +18,10 @@ def create_clip(
     output_file
 ]
 
-    return subprocess.run(cmd)
+    # Return whether ffmpeg succeeded. Previously this returned the
+    # CompletedProcess object, which is always truthy, so a failed clip
+    # (non-zero exit) slipped through download_clip's `if not result` guard.
+    return subprocess.run(cmd).returncode == 0
 
 
 

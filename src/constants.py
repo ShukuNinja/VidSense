@@ -29,7 +29,6 @@ INDEXES_FOLDER_PATH = "data/vector_store/indexes"
 
 # Retrieval Settings
 DEFAULT_TOP_K = 20
-WINDOW_SIZE = 1
 ALPHA = 0.85
 ABSOLUTE_SCORE_THRESHOLD = 0.6
 
