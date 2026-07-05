@@ -2,6 +2,7 @@ import os
 from src.constants import VIDEO_FOLDER
 from src.file_utils import get_unique_filepath, sanitize_filename
 import src.validators as validators
+from src.errors import PipelineError
 from src.ffmpeg_utils import create_clip
 
 try:
@@ -96,8 +97,8 @@ def download_clip(info,start_time, end_time,stream_url):
     clip_path = get_unique_filepath(get_video_title(info), VIDEO_FOLDER, ".mp4")
     result = create_clip(stream_url, start_time,end_time, clip_path)
     if not result:
-        return None
-    
+        raise PipelineError("Failed to download the requested clip.")
+
     return clip_path
 
 

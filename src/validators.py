@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+from src.errors import PipelineError
+
 def validate_timestamp(timestamp):
     if len(timestamp.split(":")) != 3:
         return False
@@ -59,5 +61,4 @@ def validate_url(url):
     return parsed.netloc in valid_domains
 
 def fail(message):
-    print(message)
-    exit()
+    raise PipelineError(message)

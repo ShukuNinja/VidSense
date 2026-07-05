@@ -25,6 +25,7 @@ from src.context_compressor import (
 from src.generator import generate_answer
 from src.conversation import contextualize_query
 from src.ollama_manager import check_ollama_health
+from src.errors import PipelineError
 from src.constants import (
     CHUNK_FOLDER,
     DEFAULT_TOP_K,
@@ -37,66 +38,61 @@ from src.constants import (
 def ingest_clip():
     """Download a YouTube clip, transcribe it, and build a searchable index.
 
-    Returns (chunk_data, index) on success, or None on any failure so the
-    caller can abort cleanly.
+    Returns (chunk_data, index) on success, or None if a PipelineError aborts
+    ingestion (invalid input, failed download/audio extraction) so the caller
+    can stop cleanly.
     """
-    print_header("YT Clip Downloader")
-    info, start_time, end_time, stream_url = get_user_input()
+    try:
+        print_header("YT Clip Downloader")
+        info, start_time, end_time, stream_url = get_user_input()
 
-    print_header("Downloading Clip...")
-    clip_path = download_clip(info, start_time, end_time, stream_url)
-    if not clip_path:
+        print_header("Downloading Clip...")
+        clip_path = download_clip(info, start_time, end_time, stream_url)
+        print_success()
+
+        print_header("Extracting Audio...")
+        audio_path = extract_audio(clip_path)
+        print_success()
+
+        print_header("Transcribing Audio...")
+        transcript_txt_path, transcript_srt_path, language = transcribe_audio(audio_path)
+        print_success()
+
+        subtitles = parse_srt(transcript_srt_path)
+        chunks = create_chunks(subtitles)
+        chunk_json_path = save_chunks(chunks, info["title"], language, CHUNK_FOLDER)
+        print_success()
+
+        chunk_data = load_chunk_data(chunk_json_path)
+        output_file(
+            clip_path,
+            audio_path,
+            transcript_txt_path,
+            transcript_srt_path,
+            chunk_json_path,
+        )
+
+        print_header("Chunk Generation Completed")
+
+        texts = extract_texts(chunk_data)
+        embeddings = generate_embeddings(texts, EMBEDDING_BATCH_SIZE)
+        embeddings_file_path = save_embeddings(
+            embeddings, info["title"], EMBEDDINGS_FOLDER_PATH
+        )
+        index = build_faiss_index(embeddings)
+        index_file_path = save_faiss_index(index, info["title"], INDEXES_FOLDER_PATH)
+
+        print_header("Index Built")
+        print(f"Embeddings:\n{embeddings_file_path}")
+        print(f"Index:\n{index_file_path}")
+        print_success()
+
+        return chunk_data, index
+
+    except PipelineError as exc:
         print_error()
+        print(f"    {exc}")
         return None
-    print_success()
-
-    print_header("Extracting Audio...")
-    audio_path = extract_audio(clip_path)
-    if not audio_path:
-        print_error()
-        return None
-    print_success()
-
-    print_header("Transcribing Audio...")
-    transcript_txt_path, transcript_srt_path, language = transcribe_audio(audio_path)
-    if not transcript_txt_path:
-        print_error()
-        return None
-    print_success()
-
-    subtitles = parse_srt(transcript_srt_path)
-    chunks = create_chunks(subtitles)
-    chunk_json_path = save_chunks(chunks, info["title"], language, CHUNK_FOLDER)
-    if not chunk_json_path:
-        print_error()
-        return None
-    print_success()
-
-    chunk_data = load_chunk_data(chunk_json_path)
-    output_file(
-        clip_path,
-        audio_path,
-        transcript_txt_path,
-        transcript_srt_path,
-        chunk_json_path,
-    )
-
-    print_header("Chunk Generation Completed")
-
-    texts = extract_texts(chunk_data)
-    embeddings = generate_embeddings(texts, EMBEDDING_BATCH_SIZE)
-    embeddings_file_path = save_embeddings(
-        embeddings, info["title"], EMBEDDINGS_FOLDER_PATH
-    )
-    index = build_faiss_index(embeddings)
-    index_file_path = save_faiss_index(index, info["title"], INDEXES_FOLDER_PATH)
-
-    print_header("Index Built")
-    print(f"Embeddings:\n{embeddings_file_path}")
-    print(f"Index:\n{index_file_path}")
-    print_success()
-
-    return chunk_data, index
 
 
 def answer_query(query, search_query, chunk_data, index, history=None):
