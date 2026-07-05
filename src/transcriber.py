@@ -4,21 +4,29 @@ from src.constants import TRANSCRIPTS_FOLDER
 from src.file_utils import get_unique_filepath
 from src.time_utils import format_timestamp
 
+_model = None
 
-try:
-    model = WhisperModel(
-        "medium",
-        device="cuda",
-        compute_type="float16"
-    )
-except Exception as exc:
-    print(f"CUDA initialization failed: {exc}")
-    print("Falling back to CPU mode.")
-    model = WhisperModel(
-        "medium",
-        device="cpu",
-        compute_type="int8"
-    )
+
+def get_model():
+    global _model
+
+    if _model is None:
+        try:
+            _model = WhisperModel(
+                "medium",
+                device="cuda",
+                compute_type="float16"
+            )
+        except Exception as exc:
+            print(f"CUDA initialization failed: {exc}")
+            print("Falling back to CPU mode.")
+            _model = WhisperModel(
+                "medium",
+                device="cpu",
+                compute_type="int8"
+            )
+
+    return _model
 
 
 def transcribe_audio(audio_path):
@@ -35,7 +43,7 @@ def transcribe_audio(audio_path):
     srt_path = get_unique_filepath(transcript_filename, TRANSCRIPTS_FOLDER, ".srt")
 
 
-    segments, info = model.transcribe(audio_path)
+    segments, info = get_model().transcribe(audio_path)
 
 
     print(f"Language detected: {info.language}")
