@@ -158,6 +158,10 @@ NO_EVIDENCE_RESPONSE = (
 
 MODEL_NAME = "qwen3:8b"
 
+# Conversation Settings
+# How many recent (question, answer) turns to remember for follow-up questions.
+MAX_HISTORY_TURNS = 6
+
 #Compression Settings
 SIMILARITY_THRESHOLD = 0.60
 DENSITY_THRESHOLD = 0.5

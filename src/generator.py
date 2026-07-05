@@ -1,31 +1,40 @@
 import ollama
 
 from src.prompt_builder import build_prompt
-from src.constants import MODEL_NAME, NO_EVIDENCE_RESPONSE
+from src.constants import MODEL_NAME, NO_EVIDENCE_RESPONSE, MAX_HISTORY_TURNS
 
 def no_evidence_response():
     return NO_EVIDENCE_RESPONSE
 
-def call_llm(system_prompt, user_prompt):
-    
+def call_llm(system_prompt, user_prompt, history=None):
+
+    messages = [
+        {
+            "role" : "system",
+            "content" : system_prompt
+        }
+    ]
+
+    # Replay recent conversation turns so the model can resolve follow-up
+    # references. Left empty for self-contained (new-topic) questions.
+    for turn in (history or [])[-MAX_HISTORY_TURNS:]:
+        messages.append({"role": "user", "content": turn["query"]})
+        messages.append({"role": "assistant", "content": turn["answer"]})
+
+    messages.append({
+        "role" : "user",
+        "content" : user_prompt
+    })
+
     response = ollama.chat(
         model = MODEL_NAME,
-        messages = [
-            {
-                "role" : "system",
-                "content" : system_prompt
-            },
-            {
-                "role" : "user",
-                "content" : user_prompt
-            }
-        ]
+        messages = messages
     )
 
     return response["message"]["content"]
     
 
-def generate_answer(query, evidence):
+def generate_answer(query, evidence, history=None):
     if len(evidence["regions"]) == 0:
         result = {
         "query": query,
@@ -37,7 +46,7 @@ def generate_answer(query, evidence):
 
     prompts = build_prompt(query, evidence)
 
-    answer = call_llm(prompts["system"], prompts["user"])
+    answer = call_llm(prompts["system"], prompts["user"], history=history)
 
     
     result = {
