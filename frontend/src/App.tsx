@@ -2,19 +2,42 @@ import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import NewChatModal from "./components/NewChatModal";
 import ChatView from "./components/ChatView";
-import { listChats, renameChat, deleteChat } from "./api";
-import type { Chat, ChatDetail } from "./types";
+import Auth from "./components/Auth";
+import { listChats, renameChat, deleteChat, me } from "./api";
+import { getToken, clearToken, setUnauthorizedHandler } from "./session";
+import type { Chat, ChatDetail, User } from "./types";
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [checking, setChecking] = useState(true);
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  // Restore session on load; log out on any 401.
   useEffect(() => {
-    listChats()
-      .then(setChats)
-      .catch(() => setChats([]));
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      setChats([]);
+      setActiveId(null);
+    });
+    if (getToken()) {
+      me()
+        .then(setUser)
+        .catch(() => {
+          clearToken();
+          setUser(null);
+        })
+        .finally(() => setChecking(false));
+    } else {
+      setChecking(false);
+    }
   }, []);
+
+  // Load this user's chats once authenticated.
+  useEffect(() => {
+    if (user) listChats().then(setChats).catch(() => setChats([]));
+  }, [user]);
 
   function upsertChat(chat: Chat) {
     setChats((prev) => {
@@ -31,15 +54,13 @@ export default function App() {
   }
 
   function handleChatChanged(detail: ChatDetail) {
-    // Sync sidebar entry (title / status may have changed after ingestion).
     const { messages, ...summary } = detail;
     void messages;
     upsertChat(summary as Chat);
   }
 
   async function handleRename(id: number, title: string) {
-    const updated = await renameChat(id, title);
-    upsertChat(updated);
+    upsertChat(await renameChat(id, title));
   }
 
   async function handleDelete(id: number) {
@@ -48,16 +69,33 @@ export default function App() {
     if (activeId === id) setActiveId(null);
   }
 
+  function handleLogout() {
+    clearToken();
+    setUser(null);
+    setChats([]);
+    setActiveId(null);
+  }
+
+  if (checking) {
+    return <div className="app center muted">Loading…</div>;
+  }
+
+  if (!user) {
+    return <Auth onAuthed={setUser} />;
+  }
+
   return (
     <div className="app">
       <Sidebar
         chats={chats}
         activeId={activeId}
+        userEmail={user.email}
         onSelect={setActiveId}
         onNew={() => setShowModal(true)}
         onHome={() => setActiveId(null)}
         onRename={handleRename}
         onDelete={handleDelete}
+        onLogout={handleLogout}
       />
 
       <main className="main">

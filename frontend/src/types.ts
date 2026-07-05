@@ -1,3 +1,8 @@
+export interface User {
+  id: number;
+  email: string;
+}
+
 export type ChatStatus = "pending" | "ingesting" | "ready" | "failed";
 
 export interface Chat {

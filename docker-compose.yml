@@ -26,6 +26,9 @@ services:
       OLLAMA_HOST: http://ollama:11434
       VIDSENSE_MODEL: llama3.2:3b
       FRONTEND_DIST: /app/frontend/dist
+      # SET THIS to a long random string in production (e.g. `openssl rand -hex 32`).
+      # Changing it signs all users out. Provide via a .env file or host env.
+      VIDSENSE_SECRET: ${VIDSENSE_SECRET:-dev-insecure-secret-change-me-in-production-0000}
     volumes:
       - vidsense-data:/app/data
     ports:

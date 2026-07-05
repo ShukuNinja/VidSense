@@ -1,12 +1,20 @@
 // Consume a Server-Sent Events stream from a fetch response. EventSource only
 // supports GET, so we read the ReadableStream ourselves — which also lets us
 // stream POST responses (the message endpoint).
+import { authHeaders, handleUnauthorized } from "./session";
+
 export async function streamEvents(
   url: string,
   init: RequestInit,
   onEvent: (data: any) => void,
 ): Promise<void> {
-  const res = await fetch(url, init);
+  const headers = { ...(init.headers || {}), ...authHeaders() };
+  const res = await fetch(url, { ...init, headers });
+
+  if (res.status === 401) {
+    handleUnauthorized();
+    throw new Error("Session expired. Please sign in again.");
+  }
 
   if (!res.ok || !res.body) {
     let detail = res.statusText;

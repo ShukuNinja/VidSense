@@ -1,22 +1,27 @@
 import json
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from src.pipeline import stream_answer_question
 
 from backend.database import SessionLocal
-from backend.models import Chat, Message
+from backend.models import Chat, Message, User
 from backend.schemas import MessageCreate
 from backend.services import cache, build_history
 from backend.citations import enrich_citations
+from backend.auth import get_current_user
 from backend.sse import sse
 
 router = APIRouter()
 
 
 @router.post("/chats/{chat_id}/messages")
-def create_message(chat_id: int, body: MessageCreate):
+def create_message(
+    chat_id: int,
+    body: MessageCreate,
+    user: User = Depends(get_current_user),
+):
     """Persist the user turn, then stream the assistant's grounded answer (SSE).
 
     Emits: meta -> token* -> done -> saved. The assistant message (with
@@ -29,7 +34,7 @@ def create_message(chat_id: int, body: MessageCreate):
     db = SessionLocal()
     try:
         chat = db.get(Chat, chat_id)
-        if chat is None:
+        if chat is None or chat.user_id != user.id:
             raise HTTPException(404, "Chat not found.")
         if chat.status != "ready":
             raise HTTPException(409, f"Chat is not ready (status: {chat.status}).")

@@ -143,8 +143,15 @@ pip install -r requirements-backend.txt
 uvicorn backend.app:app --reload      # from the repo root; needs Ollama running
 ```
 
-- **Persistence:** SQLite (`data/vidsense.db`) via SQLAlchemy — `chats` + `messages`.
-  FAISS index / chunk JSON stay on disk; the chat row references their paths.
+- **Auth (multi-user):** email/password with a JWT bearer token (`backend/auth.py`,
+  `bcrypt` + `PyJWT`, secret from `VIDSENSE_SECRET`). `get_current_user` guards every
+  chat/message/ingest endpoint; each `Chat` has a `user_id` owner and all queries are
+  scoped to it (cross-user access → 404). `POST /api/auth/register|login` → token;
+  `GET /api/auth/me`. The frontend stores the token (`session.ts`) and attaches it to
+  every request/stream; a 401 anywhere logs out.
+- **Persistence:** SQLite (`data/vidsense.db`) via SQLAlchemy — `users`, `chats`
+  (owned by a user), `messages`. FAISS index / chunk JSON stay on disk; the chat row
+  references their paths. (Schema changes need a fresh DB — no migrations.)
 - **Ingestion:** `POST /api/chats` validates input, creates a `pending` chat, and runs
   ingestion on a single-worker `ThreadPoolExecutor` (serialized so only one Whisper job
   runs at a time). Progress is published to a `JobRegistry` and streamed via SSE at

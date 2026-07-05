@@ -1,9 +1,17 @@
 import { streamEvents } from "./sse";
-import type { Chat, ChatDetail, StreamEvent } from "./types";
+import { authHeaders, handleUnauthorized, setToken } from "./session";
+import type { Chat, ChatDetail, StreamEvent, User } from "./types";
 
 const BASE = "/api";
 
-async function jsonOrThrow(res: Response) {
+async function request(path: string, options: RequestInit = {}): Promise<any> {
+  const headers = { ...(options.headers || {}), ...authHeaders() };
+  const res = await fetch(`${BASE}${path}`, { ...options, headers });
+
+  if (res.status === 401) {
+    handleUnauthorized();
+    throw new Error("Session expired. Please sign in again.");
+  }
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -14,46 +22,65 @@ async function jsonOrThrow(res: Response) {
     }
     throw new Error(detail);
   }
-  return res.json();
+  return res.status === 204 ? null : res.json();
 }
 
-export async function listChats(): Promise<Chat[]> {
-  return jsonOrThrow(await fetch(`${BASE}/chats`));
+function jsonPost(body: unknown): RequestInit {
+  return {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
 }
 
-export async function getChat(id: number): Promise<ChatDetail> {
-  return jsonOrThrow(await fetch(`${BASE}/chats/${id}`));
+// ---- auth ----
+export async function register(email: string, password: string): Promise<User> {
+  const r = await request("/auth/register", jsonPost({ email, password }));
+  setToken(r.access_token);
+  return r.user;
 }
 
-export async function createChat(body: {
+export async function login(email: string, password: string): Promise<User> {
+  const r = await request("/auth/login", jsonPost({ email, password }));
+  setToken(r.access_token);
+  return r.user;
+}
+
+export function me(): Promise<User> {
+  return request("/auth/me");
+}
+
+// ---- chats ----
+export function listChats(): Promise<Chat[]> {
+  return request("/chats");
+}
+
+export function getChat(id: number): Promise<ChatDetail> {
+  return request(`/chats/${id}`);
+}
+
+export function createChat(body: {
   url: string;
   start_time: string;
   end_time: string;
   title?: string;
 }): Promise<Chat> {
-  return jsonOrThrow(
-    await fetch(`${BASE}/chats`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }),
-  );
+  return request("/chats", jsonPost(body));
 }
 
-export async function renameChat(id: number, title: string): Promise<Chat> {
-  return jsonOrThrow(
-    await fetch(`${BASE}/chats/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title }),
-    }),
-  );
+export function renameChat(id: number, title: string): Promise<Chat> {
+  return request(`/chats/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
 }
 
-export async function deleteChat(id: number): Promise<void> {
-  await jsonOrThrow(await fetch(`${BASE}/chats/${id}`, { method: "DELETE" }));
+export function deleteChat(id: number): Promise<void> {
+  return request(`/chats/${id}`, { method: "DELETE" });
 }
 
+// ---- streams (auth header injected inside streamEvents) ----
 export function streamIngest(
   id: number,
   onEvent: (data: any) => void,

@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.database import Base, engine
 from backend import models  # noqa: F401 — ensure models are registered before create_all
-from backend.routers import chats, messages
+from backend.routers import auth, chats, messages
 
 # In production the built frontend is served by this backend (one process, one
 # port). In dev it's empty/absent and the Vite dev server serves the UI instead.
@@ -30,6 +30,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.include_router(auth.router, prefix="/api", tags=["auth"])
     app.include_router(chats.router, prefix="/api", tags=["chats"])
     app.include_router(messages.router, prefix="/api", tags=["messages"])
 

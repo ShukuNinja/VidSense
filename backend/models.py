@@ -18,10 +18,26 @@ def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, default=utcnow)
+
+    chats = relationship(
+        "Chat", back_populates="user", cascade="all, delete-orphan"
+    )
+
+
 class Chat(Base):
     __tablename__ = "chats"
 
     id = Column(Integer, primary_key=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     title = Column(String, nullable=False, default="New chat")
     source_url = Column(String, nullable=False)
     start_time = Column(String, nullable=False)
@@ -38,6 +54,7 @@ class Chat(Base):
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
+    user = relationship("User", back_populates="chats")
     messages = relationship(
         "Message",
         back_populates="chat",

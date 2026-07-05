@@ -51,6 +51,11 @@ docker compose up -d --build        # rebuild after code changes
 | `VIDSENSE_MODEL` | `llama3.2:3b` | Ollama model for generation + the follow-up gate |
 | `OLLAMA_HOST` | `http://ollama:11434` | where the app reaches Ollama |
 | `FRONTEND_DIST` | `/app/frontend/dist` | built SPA served by the backend |
+| `VIDSENSE_SECRET` | dev placeholder | **JWT signing secret — set a long random value in production** (`openssl rand -hex 32`). Changing it signs everyone out. |
+
+The app is **multi-user**: each visitor registers/logs in and only sees their own
+chats. Set a strong `VIDSENSE_SECRET` (e.g. via a `.env` file next to
+`docker-compose.yml`) before exposing it.
 
 Pick a model to match your GPU: a small **instruct** model (llama3.2:3b,
 qwen2.5:3b-instruct) is fastest; on a big GPU (16 GB+) you can use `qwen3:8b` — but

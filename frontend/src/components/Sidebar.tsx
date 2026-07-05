@@ -14,21 +14,25 @@ function StatusDot({ status }: { status: ChatStatus }) {
 interface Props {
   chats: Chat[];
   activeId: number | null;
+  userEmail: string;
   onSelect: (id: number) => void;
   onNew: () => void;
   onHome: () => void;
   onRename: (id: number, title: string) => void;
   onDelete: (id: number) => void;
+  onLogout: () => void;
 }
 
 export default function Sidebar({
   chats,
   activeId,
+  userEmail,
   onSelect,
   onNew,
   onHome,
   onRename,
   onDelete,
+  onLogout,
 }: Props) {
   return (
     <aside className="sidebar">
@@ -74,6 +78,15 @@ export default function Sidebar({
             </span>
           </div>
         ))}
+      </div>
+
+      <div className="sidebar-foot">
+        <span className="user-email" title={userEmail}>
+          {userEmail}
+        </span>
+        <button className="logout-btn" onClick={onLogout} title="Sign out">
+          Sign out
+        </button>
       </div>
     </aside>
   );
