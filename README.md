@@ -13,26 +13,19 @@ this README is about what I learned because of it.
 > **Live demo:** https://scholar-fretful-hurry.ngrok-free.dev
 > *(Self-hosted from a personal machine over a tunnel — it's up when the host is online.)*
 
-<p align="center">
-  <!-- HERO: record a short GIF — open a chat, ask a question, watch the answer stream
-       in with a ⏱ timestamp citation. Save as assets/screenshots/demo.gif -->
-  <img src="assets/screenshots/demo.gif" alt="VidSense demo: asking a question and getting a grounded, streaming answer with a citation" width="760">
-</p>
-
 ---
 
 ## Table of contents
 1. [What it does](#what-it-does)
-2. [Screenshots](#screenshots)
-3. [The application flow](#the-application-flow)
-4. [Retrieval architecture](#retrieval-architecture)
-5. [Tech stack](#tech-stack)
-6. [End-to-end: from a user's query to my laptop's GPU](#end-to-end-from-a-users-query-to-my-laptops-gpu)
-7. [Deployment](#deployment)
-8. [Constraints of running local models](#constraints-of-running-local-models)
-9. [The ideal design (cost no object)](#the-ideal-design-cost-no-object)
-10. [What I learned — and how it maps to how LLM providers work](#what-i-learned--and-how-it-maps-to-how-llm-providers-work)
-11. [Running it locally](#running-it-locally)
+2. [The application flow](#the-application-flow)
+3. [Retrieval architecture](#retrieval-architecture)
+4. [Tech stack](#tech-stack)
+5. [End-to-end: from a user's query to my laptop's GPU](#end-to-end-from-a-users-query-to-my-laptops-gpu)
+6. [Deployment](#deployment)
+7. [Constraints of running local models](#constraints-of-running-local-models)
+8. [The ideal design (cost no object)](#the-ideal-design-cost-no-object)
+9. [What I learned — and how it maps to how LLM providers work](#what-i-learned--and-how-it-maps-to-how-llm-providers-work)
+10. [Running it locally](#running-it-locally)
 
 ---
 
@@ -48,34 +41,6 @@ this README is about what I learned because of it.
 - **Citations.** Each answer links back to the timestamp in the original video.
 - **Multi-user.** Email/password accounts; every user only sees their own chats.
 - **Streaming UI.** Answers stream in token-by-token, like ChatGPT.
-
----
-
-## Screenshots
-
-*Placeholders — capture these and save them under `assets/screenshots/` with the
-filenames shown, and GitHub will render them here automatically.*
-
-**Asking a question — a grounded, streaming answer with a timestamp citation**
-<!-- Screenshot: a chat showing a question, the streamed answer, and a ⏱ citation chip.
-     Save as assets/screenshots/answer.png -->
-![Grounded streaming answer with a timestamp citation](assets/screenshots/answer.png)
-
-**New chat → ingestion progress**
-<!-- Screenshot (or GIF): the "New chat" modal (URL + start/end) and/or the
-     Download → Audio → Transcribe → Chunk → Index stepper.
-     Save as assets/screenshots/ingest.png (or ingest.gif) -->
-![New chat modal and the ingestion progress stepper](assets/screenshots/ingest.png)
-
-**Multi-chat sidebar**
-<!-- Screenshot: the sidebar listing several chats with their status dots.
-     Save as assets/screenshots/sidebar.png -->
-![Sidebar listing multiple private chats](assets/screenshots/sidebar.png)
-
-**Login**
-<!-- Screenshot: the email/password sign-in screen.
-     Save as assets/screenshots/login.png -->
-![Email / password login screen](assets/screenshots/login.png)
 
 ---
 
