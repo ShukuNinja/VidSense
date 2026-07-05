@@ -151,8 +151,8 @@ EVALUATION_QUERIES = [
 
 # LLM Settings
 NO_EVIDENCE_RESPONSE = (
-    "The video does not provide "
-    "information relevant to this question."
+    "The video does not provide sufficient "
+    "information to answer this question."
 )
 
 MODEL_NAME = "qwen3:8b"

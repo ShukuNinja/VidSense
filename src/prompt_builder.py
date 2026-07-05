@@ -1,9 +1,10 @@
 from src.context_builder import render_compressed_context
+from src.constants import NO_EVIDENCE_RESPONSE
 
 
 def build_system_prompt():
 
-    return """
+    return f"""
 You are a YouTube Knowledge Assistant.
 
 Your knowledge is limited to the evidence provided.
@@ -17,7 +18,7 @@ Rules:
 3. Do not infer, assume, or speculate beyond what the evidence states.
 4. If the evidence does not contain enough information to answer the question, state:
 
-"The video does not provide sufficient information to answer this question."
+"{NO_EVIDENCE_RESPONSE}"
 
 Do not use outside knowledge to complete the answer.
 5. Answer clearly and concisely.
