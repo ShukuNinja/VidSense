@@ -55,6 +55,7 @@ export default function App() {
         activeId={activeId}
         onSelect={setActiveId}
         onNew={() => setShowModal(true)}
+        onHome={() => setActiveId(null)}
         onRename={handleRename}
         onDelete={handleDelete}
       />
@@ -70,6 +71,7 @@ export default function App() {
           <ChatView
             key={activeId}
             chatId={activeId}
+            onBack={() => setActiveId(null)}
             onChatChanged={handleChatChanged}
           />
         )}

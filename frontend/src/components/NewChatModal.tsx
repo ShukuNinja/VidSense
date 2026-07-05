@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createChat } from "../api";
 import { isYouTubeUrl, isValidRange, isTimestamp } from "../util";
 import type { Chat } from "../types";
@@ -14,6 +14,14 @@ export default function NewChatModal({ onCreated, onClose }: Props) {
   const [end, setEnd] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   function validate(): string | null {
     if (!isYouTubeUrl(url)) return "Enter a valid YouTube URL.";

@@ -16,6 +16,7 @@ interface Props {
   activeId: number | null;
   onSelect: (id: number) => void;
   onNew: () => void;
+  onHome: () => void;
   onRename: (id: number, title: string) => void;
   onDelete: (id: number) => void;
 }
@@ -25,13 +26,16 @@ export default function Sidebar({
   activeId,
   onSelect,
   onNew,
+  onHome,
   onRename,
   onDelete,
 }: Props) {
   return (
     <aside className="sidebar">
       <div className="sidebar-head">
-        <span className="brand">VidSense</span>
+        <button className="brand-btn" onClick={onHome} title="Home">
+          VidSense
+        </button>
         <button className="new-chat" onClick={onNew}>
           + New
         </button>

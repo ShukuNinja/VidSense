@@ -7,10 +7,11 @@ import Composer from "./Composer";
 
 interface Props {
   chatId: number;
+  onBack: () => void;
   onChatChanged: (chat: ChatDetail) => void;
 }
 
-export default function ChatView({ chatId, onChatChanged }: Props) {
+export default function ChatView({ chatId, onBack, onChatChanged }: Props) {
   const [chat, setChat] = useState<ChatDetail | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,53 +88,63 @@ export default function ChatView({ chatId, onChatChanged }: Props) {
     }
   }
 
+  let body;
   if (loading) {
-    return <div className="chat-view center muted">Loading…</div>;
-  }
-
-  if (error && !chat) {
-    return <div className="chat-view center error-banner">{error}</div>;
-  }
-
-  if (!chat) return null;
-
-  if (chat.status === "failed") {
-    return (
-      <div className="chat-view center">
+    body = <div className="center muted">Loading…</div>;
+  } else if (error && !chat) {
+    body = (
+      <div className="center">
+        <div className="error-banner">{error}</div>
+      </div>
+    );
+  } else if (!chat) {
+    body = null;
+  } else if (chat.status === "failed") {
+    body = (
+      <div className="center">
         <div className="error-banner">
           <strong>Ingestion failed.</strong>
           <div>{chat.error}</div>
         </div>
       </div>
     );
-  }
-
-  if (chat.status !== "ready") {
-    return (
-      <div className="chat-view">
-        <IngestProgress
-          chatId={chatId}
-          onReady={load}
-          onFailed={(msg) => setChat({ ...chat, status: "failed", error: msg })}
-        />
-      </div>
+  } else if (chat.status !== "ready") {
+    body = (
+      <IngestProgress
+        chatId={chatId}
+        onReady={load}
+        onFailed={(msg) => setChat({ ...chat, status: "failed", error: msg })}
+      />
+    );
+  } else {
+    body = (
+      <>
+        <MessageList messages={messages} />
+        {error && <div className="inline-error">{error}</div>}
+        <Composer disabled={sending} onSend={handleSend} />
+      </>
     );
   }
 
   return (
     <div className="chat-view">
-      <header className="chat-header">
-        <span className="chat-header-title">{chat.title}</span>
-        <span className="chat-header-sub">
-          {chat.video_title && chat.video_title !== chat.title
-            ? `${chat.video_title} · `
-            : ""}
-          clip {chat.start_time}–{chat.end_time}
-        </span>
+      <header className="chat-topbar">
+        <button className="back-btn" onClick={onBack} title="Back to home">
+          ← Back
+        </button>
+        {chat && (
+          <div className="topbar-titles">
+            <span className="chat-header-title">{chat.title}</span>
+            <span className="chat-header-sub">
+              {chat.video_title && chat.video_title !== chat.title
+                ? `${chat.video_title} · `
+                : ""}
+              clip {chat.start_time}–{chat.end_time}
+            </span>
+          </div>
+        )}
       </header>
-      <MessageList messages={messages} />
-      {error && <div className="inline-error">{error}</div>}
-      <Composer disabled={sending} onSend={handleSend} />
+      <div className="chat-content">{body}</div>
     </div>
   );
 }
