@@ -36,3 +36,10 @@ VidSense.md
 
 # Local docs
 docs/
+
+# Local tunnel binary
+cloudflared.exe
+
+# Local tunnel binaries
+ngrok.exe
+ngrok.zip
