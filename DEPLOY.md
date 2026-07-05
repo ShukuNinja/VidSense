@@ -59,6 +59,9 @@ docker compose up -d --build        # rebuild after code changes
 | `FRONTEND_DIST` | `/app/frontend/dist` | built SPA served by the backend |
 | `VIDSENSE_SECRET` | dev placeholder | **JWT signing secret — set a long random value in production** (`openssl rand -hex 32`). Changing it signs everyone out. |
 | `DOMAIN` | `localhost` | Caddy's site address. A real domain → automatic Let's Encrypt HTTPS; `localhost` → local self-signed cert. |
+| `VIDSENSE_INGEST_PER_HOUR` | `10` | max new clips a user may ingest per hour |
+| `VIDSENSE_MSG_PER_MIN` | `30` | max questions a user may ask per minute |
+| `VIDSENSE_AUTH_PER_5MIN` | `10` | max register/login attempts per IP per 5 min |
 
 The app is **multi-user**: each visitor registers/logs in and only sees their own
 chats. Set a strong `VIDSENSE_SECRET` (e.g. via a `.env` file next to
@@ -91,5 +94,7 @@ Both survive `docker compose down`. Use `docker compose down -v` to wipe them.
 - **Windows/macOS hosts:** GPU passthrough to containers is limited; a Linux host with
   the NVIDIA Container Toolkit is recommended for production.
 - **HTTPS:** handled by the built-in `caddy` service (automatic certs). No extra proxy
-  needed. There's still no rate-limiting — add abuse protection before public exposure,
-  since ingestion is compute-heavy.
+  needed.
+- **Rate limiting:** per-user (ingest / messages) and per-IP (auth) limits are built in
+  (in-memory — fine for one instance; a multi-replica deploy would need a shared store
+  like Redis). Tune via the env vars above.

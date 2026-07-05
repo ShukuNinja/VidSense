@@ -5,6 +5,7 @@ from backend.database import get_db
 from backend.models import User
 from backend.schemas import AuthRequest
 from backend.auth import hash_password, verify_password, create_token, get_current_user
+from backend.ratelimit import auth_rate_limit
 
 router = APIRouter()
 
@@ -22,7 +23,11 @@ def _auth_response(user: User) -> dict:
 
 
 @router.post("/auth/register")
-def register(body: AuthRequest, db: Session = Depends(get_db)):
+def register(
+    body: AuthRequest,
+    db: Session = Depends(get_db),
+    _: None = Depends(auth_rate_limit),
+):
     email = body.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(400, "Enter a valid email address.")
@@ -39,7 +44,11 @@ def register(body: AuthRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/auth/login")
-def login(body: AuthRequest, db: Session = Depends(get_db)):
+def login(
+    body: AuthRequest,
+    db: Session = Depends(get_db),
+    _: None = Depends(auth_rate_limit),
+):
     email = body.email.strip().lower()
     user = db.query(User).filter(User.email == email).first()
     if user is None or not verify_password(body.password, user.password_hash):

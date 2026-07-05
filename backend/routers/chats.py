@@ -14,6 +14,7 @@ from backend.schemas import ChatCreate, ChatRename
 from backend.serialize import chat_to_dict, chat_detail
 from backend.services import schedule_ingestion, registry, cache
 from backend.auth import get_current_user
+from backend.ratelimit import ingest_rate_limit
 from backend.sse import sse
 
 router = APIRouter()
@@ -30,7 +31,7 @@ def _owned_chat(chat_id, user, db):
 @router.post("/chats")
 def create_chat(
     body: ChatCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(ingest_rate_limit),
     db: Session = Depends(get_db),
 ):
     # Cheap, offline validation up front; network resolution happens in the job.

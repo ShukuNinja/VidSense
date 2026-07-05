@@ -152,6 +152,10 @@ uvicorn backend.app:app --reload      # from the repo root; needs Ollama running
 - **Persistence:** SQLite (`data/vidsense.db`) via SQLAlchemy — `users`, `chats`
   (owned by a user), `messages`. FAISS index / chunk JSON stay on disk; the chat row
   references their paths. (Schema changes need a fresh DB — no migrations.)
+- **Rate limiting** (`backend/ratelimit.py`): in-memory fixed-window limits as FastAPI
+  deps — per-user on ingest (`ingest_rate_limit`) and messages (`message_rate_limit`),
+  per-IP on auth (`auth_rate_limit`, reads `X-Forwarded-For` from Caddy). Env-tunable;
+  single-instance only (use Redis if scaled out).
 - **Ingestion:** `POST /api/chats` validates input, creates a `pending` chat, and runs
   ingestion on a single-worker `ThreadPoolExecutor` (serialized so only one Whisper job
   runs at a time). Progress is published to a `JobRegistry` and streamed via SSE at

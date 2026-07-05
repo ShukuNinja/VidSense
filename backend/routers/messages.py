@@ -10,7 +10,7 @@ from backend.models import Chat, Message, User
 from backend.schemas import MessageCreate
 from backend.services import cache, build_history
 from backend.citations import enrich_citations
-from backend.auth import get_current_user
+from backend.ratelimit import message_rate_limit
 from backend.sse import sse
 
 router = APIRouter()
@@ -20,7 +20,7 @@ router = APIRouter()
 def create_message(
     chat_id: int,
     body: MessageCreate,
-    user: User = Depends(get_current_user),
+    user: User = Depends(message_rate_limit),
 ):
     """Persist the user turn, then stream the assistant's grounded answer (SSE).
 
