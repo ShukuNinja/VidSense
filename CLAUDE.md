@@ -106,6 +106,8 @@ Loop repeats until the user types `exit`/`quit`.
   parse/API error.
 - **Grounding:** the no-evidence sentence lives in one place — `constants.NO_EVIDENCE_RESPONSE`
   — and is injected into the system prompt, so the code path and the LLM instruction stay in sync.
+- **Unique artifact paths:** index, embeddings, **and chunks** all use `get_unique_filepath`,
+  so multiple chats from the same video never overwrite each other's data.
 - **Ollama resilience:** all chat calls go through `ollama_manager.chat_with_retry`
   (`OLLAMA_MAX_ATTEMPTS`), which retries the transient CUDA cold-load crash. Streaming
   (`stream_llm`) retries only **before the first token** so output is never duplicated.
@@ -145,7 +147,9 @@ uvicorn backend.app:app --reload      # from the repo root; needs Ollama running
 - **Messaging:** `POST /api/chats/{id}/messages` persists the user turn, then **streams**
   the answer as SSE events `meta → token* → done → saved`; the assistant message + citations
   are persisted after the stream. Token streaming uses `generator.stream_llm` /
-  `pipeline.stream_answer_question` (`ollama.chat(stream=True)`).
+  `pipeline.stream_answer_question` (`ollama.chat(stream=True)`). Citations are enriched
+  (`backend/citations.py`) with absolute video timestamps + `watch?v=…&t=<secs>s`
+  deep-links (clip-relative region time + the clip's start offset).
 - **History:** rebuilt per turn from stored messages, segment-aware
   (`services.build_history`) so it mirrors the CLI's reset-on-new-topic.
 - **Caches:** `services.cache` (LRU by `chat_id`) keeps loaded FAISS index + chunks warm.
@@ -177,7 +181,7 @@ npm run dev          # http://localhost:5173 ; proxies /api -> 127.0.0.1:8000
   (URL + time range, client-side validation mirroring `src/validators.py`),
   `IngestProgress` (SSE stepper: download → audio → transcribe → chunk → index),
   `ChatView` (loads detail; shows ingest progress until `ready`, then the chat),
-  `MessageList` (bubbles + citation chips), `Composer`.
+  `MessageList` (bubbles + citations as clickable YouTube deep-links), `Composer`.
 - **Streaming UX:** on send, an optimistic user bubble + an empty assistant bubble
   ("Searching the transcript…") are added; `token` events append text live, `done`
   finalizes content + citations. Vite dev-server proxy keeps it same-origin.

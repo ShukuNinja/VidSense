@@ -17,6 +17,8 @@ export interface Citation {
   region_id: number;
   start_time: string;
   end_time: string;
+  timestamp?: string; // absolute position in the original video (HH:MM:SS)
+  youtube_url?: string | null;
 }
 
 export interface Message {

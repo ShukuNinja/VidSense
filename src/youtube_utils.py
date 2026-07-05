@@ -1,4 +1,6 @@
 import os
+from urllib.parse import urlparse, parse_qs
+
 from src.constants import VIDEO_FOLDER
 from src.file_utils import get_unique_filepath, sanitize_filename
 import src.validators as validators
@@ -9,6 +11,28 @@ try:
     import yt_dlp  # type: ignore
 except Exception as e:
     raise ImportError("yt_dlp is required. Install it with: pip install yt-dlp") from e
+
+
+def get_video_id(url):
+    """Extract the YouTube video id from a watch/short/embed/youtu.be URL."""
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return None
+
+    host = parsed.netloc.lower()
+    if host in ("youtu.be", "www.youtu.be"):
+        return parsed.path.lstrip("/").split("/")[0] or None
+
+    if "youtube.com" in host:
+        query = parse_qs(parsed.query)
+        if "v" in query:
+            return query["v"][0]
+        parts = [p for p in parsed.path.split("/") if p]
+        if len(parts) >= 2 and parts[0] in ("embed", "shorts"):
+            return parts[1]
+
+    return None
 
 class SilentLogger:
     def debug(self, msg):

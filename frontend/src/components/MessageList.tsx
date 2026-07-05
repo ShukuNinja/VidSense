@@ -14,11 +14,25 @@ function Bubble({ message }: { message: Message }) {
         )}
         {message.citations && message.citations.length > 0 && (
           <div className="citations">
-            {message.citations.map((c) => (
-              <span key={c.region_id} className="cite">
-                ⏱ {shortTime(c.start_time)}–{shortTime(c.end_time)}
-              </span>
-            ))}
+            <span className="cite-label">Sources:</span>
+            {message.citations.map((c) =>
+              c.youtube_url ? (
+                <a
+                  key={c.region_id}
+                  className="cite cite-link"
+                  href={c.youtube_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open the video at this moment"
+                >
+                  ▶ {c.timestamp ?? shortTime(c.start_time)}
+                </a>
+              ) : (
+                <span key={c.region_id} className="cite">
+                  ⏱ {c.timestamp ?? shortTime(c.start_time)}
+                </span>
+              ),
+            )}
           </div>
         )}
       </div>

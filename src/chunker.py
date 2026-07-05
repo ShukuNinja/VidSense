@@ -1,7 +1,6 @@
-from src.file_utils import sanitize_filename
+from src.file_utils import sanitize_filename, get_unique_filepath
 import srt
 import json
-import os
 from src.time_utils import format_timestamp
 
 def parse_srt(srt_path):
@@ -83,10 +82,12 @@ def save_chunks(chunks, video_title, language, output_path):
         "chunks": serializable_chunks
     }
 
-
-    output_file = os.path.join(output_path, f"{video_title}_{language}.json")
-    os.makedirs(output_path, exist_ok=True)
+    # Unique path per ingest (like the index/embeddings). Previously this
+    # overwrote a fixed "{title}_{lang}.json", so a second clip from the same
+    # video clobbered an earlier chat's chunks while its index still pointed at
+    # the old positions.
+    output_file = get_unique_filepath(f"{video_title}_{language}", output_path, ".json")
     with open(output_file, "w", encoding="utf-8") as file:
         json.dump(dataset, file, indent=4)
-    
+
     return output_file

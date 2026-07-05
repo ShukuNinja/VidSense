@@ -124,9 +124,12 @@ export default function ChatView({ chatId, onChatChanged }: Props) {
     <div className="chat-view">
       <header className="chat-header">
         <span className="chat-header-title">{chat.title}</span>
-        {chat.video_title && chat.video_title !== chat.title && (
-          <span className="chat-header-sub">{chat.video_title}</span>
-        )}
+        <span className="chat-header-sub">
+          {chat.video_title && chat.video_title !== chat.title
+            ? `${chat.video_title} · `
+            : ""}
+          clip {chat.start_time}–{chat.end_time}
+        </span>
       </header>
       <MessageList messages={messages} />
       {error && <div className="inline-error">{error}</div>}

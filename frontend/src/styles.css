@@ -267,7 +267,12 @@ body {
   margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+}
+.cite-label {
+  font-size: 12px;
+  color: var(--muted);
 }
 .cite {
   font-size: 12px;
@@ -275,6 +280,14 @@ body {
   color: #35624f;
   border-radius: 6px;
   padding: 2px 8px;
+  text-decoration: none;
+}
+.cite-link {
+  cursor: pointer;
+}
+.cite-link:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 /* ---------- Composer ---------- */

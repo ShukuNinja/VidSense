@@ -9,6 +9,7 @@ from backend.database import SessionLocal
 from backend.models import Chat, Message
 from backend.schemas import MessageCreate
 from backend.services import cache, build_history
+from backend.citations import enrich_citations
 from backend.sse import sse
 
 router = APIRouter()
@@ -41,6 +42,8 @@ def create_message(chat_id: int, body: MessageCreate):
         prior = [m for m in chat.messages if m.id != user_msg.id]
         history = build_history(prior)
         index, chunk_data = cache.get(chat)
+        source_url = chat.source_url
+        clip_start = chat.start_time
     finally:
         db.close()
 
@@ -52,6 +55,13 @@ def create_message(chat_id: int, body: MessageCreate):
                 if event["type"] == "token":
                     parts.append(event["text"])
                 elif event["type"] == "done":
+                    # Add absolute video timestamps + YouTube deep-links.
+                    event = {
+                        **event,
+                        "citations": enrich_citations(
+                            event["citations"], source_url, clip_start
+                        ),
+                    }
                     done = event
                 yield sse(event)
         except Exception as exc:
