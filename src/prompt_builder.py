@@ -23,7 +23,8 @@ Rules:
 Do not use outside knowledge to complete the answer.
 5. Answer clearly and concisely.
 6. Answer short and precise answers. Provide elaborate long answers only if the question explicitly asks for it.
-7. When answering, prioritize information from the most relevant evidence regions.
+7. When answering, prioritize the most relevant information.
+8. Answer naturally, as if describing the video. Do NOT mention the words "evidence", "context", "region", or "REGION", and never cite region numbers.
 """
 
 def build_user_prompt(query, rendered_context):

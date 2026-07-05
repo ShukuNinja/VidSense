@@ -2,7 +2,12 @@ import time
 
 import ollama
 
-from src.constants import MODEL_NAME, OLLAMA_MAX_ATTEMPTS, OLLAMA_RETRY_DELAY
+from src.constants import (
+    MODEL_NAME,
+    OLLAMA_MAX_ATTEMPTS,
+    OLLAMA_RETRY_DELAY,
+    OLLAMA_THINK,
+)
 
 
 def chat_with_retry(**kwargs):
@@ -12,6 +17,9 @@ def chat_with_retry(**kwargs):
     reliably recovers on a second attempt, so retry it rather than surfacing the
     failure. Non-transient errors are re-raised once attempts are exhausted.
     """
+    if OLLAMA_THINK is not None:
+        kwargs.setdefault("think", OLLAMA_THINK)
+
     attempt = 0
     while True:
         attempt += 1

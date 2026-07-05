@@ -155,7 +155,15 @@ NO_EVIDENCE_RESPONSE = (
     "information to answer this question."
 )
 
-MODEL_NAME = "qwen3:8b"
+MODEL_NAME = "llama3.2:3b"
+
+# Controls Ollama's `think` request option:
+#   None  -> don't send the param (for non-reasoning models like llama3.2)
+#   False -> ask a reasoning model (e.g. qwen3) to skip its thinking phase
+#   True  -> allow full chain-of-thought
+# A plain instruct model answers directly and fast; reasoning models (qwen3)
+# stay slow even with think=False because they narrate reasoning in the answer.
+OLLAMA_THINK = None
 
 # Conversation Settings
 # How many recent (question, answer) turns to remember for follow-up questions.

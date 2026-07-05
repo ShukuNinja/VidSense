@@ -10,6 +10,7 @@ from src.constants import (
     MAX_HISTORY_TURNS,
     OLLAMA_MAX_ATTEMPTS,
     OLLAMA_RETRY_DELAY,
+    OLLAMA_THINK,
 )
 
 
@@ -52,12 +53,16 @@ def stream_llm(system_prompt, user_prompt, history=None):
     """
     messages = _build_messages(system_prompt, user_prompt, history)
 
+    chat_kwargs = {"model": MODEL_NAME, "messages": messages, "stream": True}
+    if OLLAMA_THINK is not None:
+        chat_kwargs["think"] = OLLAMA_THINK
+
     attempt = 0
     while True:
         attempt += 1
         produced = False
         try:
-            for chunk in ollama.chat(model=MODEL_NAME, messages=messages, stream=True):
+            for chunk in ollama.chat(**chat_kwargs):
                 piece = chunk.get("message", {}).get("content", "")
                 if piece:
                     produced = True

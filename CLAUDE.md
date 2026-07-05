@@ -121,7 +121,8 @@ Loop repeats until the user types `exit`/`quit`.
 | Constant | Value | Meaning |
 |---|---|---|
 | `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` | sentence-transformer for chunks + queries |
-| `MODEL_NAME` | `qwen3:8b` | Ollama generation (and follow-up gate) model |
+| `MODEL_NAME` | `llama3.2:3b` | Ollama generation + follow-up gate. Small instruct model that fits a 4 GB GPU and answers directly. Reasoning models (qwen3) are far slower here — they narrate reasoning even with `think=False`. |
+| `OLLAMA_THINK` | `None` | `think` request option: `None` = omit (instruct models), `False` = ask a reasoning model to skip thinking, `True` = full chain-of-thought |
 | `DEFAULT_TOP_K` | `20` | candidates retrieved per query |
 | `ALPHA` / `ABSOLUTE_SCORE_THRESHOLD` | `0.85` / `0.6` | relative + absolute retrieval filter |
 | `SIMILARITY_THRESHOLD` / `DENSITY_THRESHOLD` | `0.60` / `0.5` | sentence-keep + full-vs-compressed region cutoff |
