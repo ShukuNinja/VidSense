@@ -82,6 +82,20 @@ Two named volumes:
 
 Both survive `docker compose down`. Use `docker compose down -v` to wipe them.
 
+## GPU-free deploy (hosted LLM)
+
+To run on a **cheap CPU host** (no GPU, ~$5–10/mo) instead of a GPU box, point the
+LLM at a hosted API and drop the `ollama` service:
+
+1. In `.env`: `LLM_PROVIDER=openai`, `LLM_API_BASE`, `LLM_API_KEY`, `LLM_MODEL`
+   (see `.env.example` for OpenAI / Groq / OpenRouter→Claude examples).
+2. Remove the `ollama` service (and its `deploy:` GPU block) from `docker-compose.yml`.
+
+The app then needs no GPU for answering. **Whisper transcription still runs on CPU**
+in the `app` container (slower per clip, fine for short clips) — swapping transcription
+to a hosted API is a separate step. This is the setup to deploy a live, always-on demo
+without renting a GPU.
+
 ## Notes / gotchas
 
 - **CPU-only host:** delete the `deploy:` block from the `ollama` service in

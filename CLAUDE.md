@@ -75,9 +75,10 @@ Loop repeats until the user types `exit`/`quit`.
 | `context_builder.py` | `build_context` (region growing), `render_compressed_context` |
 | `context_compressor.py` | sentence split/score, density-based region compression |
 | `prompt_builder.py` | system + user prompt (grounding rules; injects `NO_EVIDENCE_RESPONSE`) |
-| `generator.py` | `call_llm` / `generate_answer` (Ollama), optional `history` |
-| `conversation.py` | `contextualize_query` — follow-up vs new-topic gate + query rewrite |
-| `ollama_manager.py` | `check_ollama_health` |
+| `llm.py` | **Provider abstraction**: `chat()`, `stream_chat()`, `health_check()` — dispatches to Ollama (local) or an OpenAI-compatible API via `LLM_PROVIDER` |
+| `generator.py` | `call_llm` / `stream_answer` / `generate_answer` — go through `llm.py` |
+| `conversation.py` | `contextualize_query` — follow-up gate + query rewrite (via `llm.chat`) |
+| `ollama_manager.py` | `check_ollama_health`, `chat_with_retry` (Ollama impl used by `llm.py`) |
 | `validators.py` | input validation; `fail()` raises `PipelineError` |
 | `errors.py` | `PipelineError` (shared operational-failure exception) |
 | `console_utils.py`, `file_utils.py`, `time_utils.py`, `constants.py` | helpers / config |

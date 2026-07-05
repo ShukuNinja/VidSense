@@ -29,6 +29,12 @@ services:
       # SET THIS to a long random string in production (e.g. `openssl rand -hex 32`).
       # Changing it signs all users out. Provide via a .env file or host env.
       VIDSENSE_SECRET: ${VIDSENSE_SECRET:-dev-insecure-secret-change-me-in-production-0000}
+      # LLM provider. "ollama" (local, needs the GPU service below) or "openai"
+      # (any OpenAI-compatible hosted API — lets you drop the GPU entirely).
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      LLM_API_BASE: ${LLM_API_BASE:-https://api.openai.com/v1}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
     volumes:
       - vidsense-data:/app/data
     # Not published to the host — reached only through the caddy proxy below.
