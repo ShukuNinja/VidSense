@@ -161,6 +161,12 @@ MODEL_NAME = "qwen3:8b"
 # How many recent (question, answer) turns to remember for follow-up questions.
 MAX_HISTORY_TURNS = 6
 
+# Ollama Resilience
+# Total attempts per chat call. Guards against the transient CUDA cold-load
+# crash where llama-server dies on the first request but recovers on retry.
+OLLAMA_MAX_ATTEMPTS = 2
+OLLAMA_RETRY_DELAY = 2.0
+
 #Compression Settings
 SIMILARITY_THRESHOLD = 0.60
 DENSITY_THRESHOLD = 0.5

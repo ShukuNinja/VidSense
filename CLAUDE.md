@@ -106,6 +106,9 @@ Loop repeats until the user types `exit`/`quit`.
   parse/API error.
 - **Grounding:** the no-evidence sentence lives in one place — `constants.NO_EVIDENCE_RESPONSE`
   — and is injected into the system prompt, so the code path and the LLM instruction stay in sync.
+- **Ollama resilience:** all chat calls go through `ollama_manager.chat_with_retry`
+  (`OLLAMA_MAX_ATTEMPTS`), which retries the transient CUDA cold-load crash. Streaming
+  (`stream_llm`) retries only **before the first token** so output is never duplicated.
 
 ## Key constants (`src/constants.py`)
 
@@ -117,6 +120,7 @@ Loop repeats until the user types `exit`/`quit`.
 | `ALPHA` / `ABSOLUTE_SCORE_THRESHOLD` | `0.85` / `0.6` | relative + absolute retrieval filter |
 | `SIMILARITY_THRESHOLD` / `DENSITY_THRESHOLD` | `0.60` / `0.5` | sentence-keep + full-vs-compressed region cutoff |
 | `MAX_HISTORY_TURNS` | `6` | conversation turns remembered |
+| `OLLAMA_MAX_ATTEMPTS` | `2` | chat-call attempts before surfacing a failure (CUDA-crash retry) |
 
 ## Data layout (all under `data/`, git-ignored)
 `videos/` · `audio/` · `transcripts/` · `chunks/` · `vector_store/{embeddings,indexes}/` ·

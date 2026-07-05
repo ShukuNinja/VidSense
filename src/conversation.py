@@ -1,7 +1,6 @@
 import re
 
-import ollama
-
+from src.ollama_manager import chat_with_retry
 from src.constants import MODEL_NAME, MAX_HISTORY_TURNS
 
 CONTEXTUALIZE_SYSTEM = """You reformulate a user's latest question for a video Q&A system.
@@ -57,7 +56,7 @@ def contextualize_query(query, history):
     )
 
     try:
-        response = ollama.chat(
+        response = chat_with_retry(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": CONTEXTUALIZE_SYSTEM},

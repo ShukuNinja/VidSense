@@ -1,6 +1,26 @@
+import time
+
 import ollama
 
-from src.constants import MODEL_NAME
+from src.constants import MODEL_NAME, OLLAMA_MAX_ATTEMPTS, OLLAMA_RETRY_DELAY
+
+
+def chat_with_retry(**kwargs):
+    """ollama.chat with a retry on transient server errors.
+
+    The CUDA cold-load crash (llama-server dies with a 500 on the first request)
+    reliably recovers on a second attempt, so retry it rather than surfacing the
+    failure. Non-transient errors are re-raised once attempts are exhausted.
+    """
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            return ollama.chat(**kwargs)
+        except ollama.ResponseError:
+            if attempt >= OLLAMA_MAX_ATTEMPTS:
+                raise
+            time.sleep(OLLAMA_RETRY_DELAY)
 
 
 def _model_names(response):

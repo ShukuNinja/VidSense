@@ -1,7 +1,16 @@
+import time
+
 import ollama
 
 from src.prompt_builder import build_prompt
-from src.constants import MODEL_NAME, NO_EVIDENCE_RESPONSE, MAX_HISTORY_TURNS
+from src.ollama_manager import chat_with_retry
+from src.constants import (
+    MODEL_NAME,
+    NO_EVIDENCE_RESPONSE,
+    MAX_HISTORY_TURNS,
+    OLLAMA_MAX_ATTEMPTS,
+    OLLAMA_RETRY_DELAY,
+)
 
 
 def _build_messages(system_prompt, user_prompt, history=None):
@@ -27,7 +36,7 @@ def _build_messages(system_prompt, user_prompt, history=None):
 
 
 def call_llm(system_prompt, user_prompt, history=None):
-    response = ollama.chat(
+    response = chat_with_retry(
         model = MODEL_NAME,
         messages = _build_messages(system_prompt, user_prompt, history)
     )
@@ -36,15 +45,28 @@ def call_llm(system_prompt, user_prompt, history=None):
 
 
 def stream_llm(system_prompt, user_prompt, history=None):
-    """Yield answer text deltas as Ollama generates them."""
-    for chunk in ollama.chat(
-        model = MODEL_NAME,
-        messages = _build_messages(system_prompt, user_prompt, history),
-        stream = True,
-    ):
-        piece = chunk.get("message", {}).get("content", "")
-        if piece:
-            yield piece
+    """Yield answer text deltas as Ollama generates them.
+
+    Retries the transient cold-load crash, but only before the first token is
+    emitted, so streamed output is never duplicated.
+    """
+    messages = _build_messages(system_prompt, user_prompt, history)
+
+    attempt = 0
+    while True:
+        attempt += 1
+        produced = False
+        try:
+            for chunk in ollama.chat(model=MODEL_NAME, messages=messages, stream=True):
+                piece = chunk.get("message", {}).get("content", "")
+                if piece:
+                    produced = True
+                    yield piece
+            return
+        except ollama.ResponseError:
+            if produced or attempt >= OLLAMA_MAX_ATTEMPTS:
+                raise
+            time.sleep(OLLAMA_RETRY_DELAY)
 
 
 def stream_answer(query, evidence, history=None):
