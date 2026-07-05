@@ -3,9 +3,6 @@ import ollama
 from src.prompt_builder import build_prompt
 from src.constants import MODEL_NAME, NO_EVIDENCE_RESPONSE, MAX_HISTORY_TURNS
 
-def no_evidence_response():
-    return NO_EVIDENCE_RESPONSE
-
 def call_llm(system_prompt, user_prompt, history=None):
 
     messages = [

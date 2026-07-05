@@ -1,5 +1,5 @@
 from src.embedder import get_model
-from src.constants import ABSOLUTE_SCORE_THRESHOLD, ALPHA, DEFAULT_TOP_K, INSTRUCTION, RETRIEVAL_TEST_QUERIES
+from src.constants import ABSOLUTE_SCORE_THRESHOLD, ALPHA, DEFAULT_TOP_K, INSTRUCTION
 import numpy as np
 
 def embed_query(query: str) -> np.ndarray:

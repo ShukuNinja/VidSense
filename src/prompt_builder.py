@@ -38,11 +38,7 @@ def build_prompt(query, compressed_evidence):
     user_prompt = build_user_prompt(
                 query, 
                 rendered_context)
-    prompt = {"system": system_prompt, 
+    prompt = {"system": system_prompt,
             "user": user_prompt}
-    
-    print("Original length:", len(prompt["user"]))
 
-    print("Final length:", len(prompt["user"]))
-    
     return prompt
