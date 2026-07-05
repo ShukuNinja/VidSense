@@ -29,7 +29,11 @@ def search_index(query_embedding: np.ndarray, index, top_k: int = DEFAULT_TOP_K)
         raise ValueError(
             "FAISS index cannot be None."
         )
-    
+
+    # Never request more neighbours than the index holds. Otherwise FAISS pads
+    # the extra slots with sentinel values that pollute the score filtering.
+    top_k = min(top_k, index.ntotal)
+
     scores,indices = index.search(
         query_embedding, top_k
     )
