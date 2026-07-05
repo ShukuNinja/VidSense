@@ -157,5 +157,31 @@ uvicorn backend.app:app --reload      # from the repo root; needs Ollama running
 Streaming routes are sync generators, so Starlette runs the blocking Ollama/embedding
 calls in its threadpool (they don't block the event loop).
 
+## Frontend (`frontend/`, React + Vite + TS — Phase 2)
+
+ChatGPT-style SPA over the backend. No UI framework — plain CSS + a small
+fetch-based SSE client.
+
+```bash
+cd frontend && npm install
+npm run dev          # http://localhost:5173 ; proxies /api -> 127.0.0.1:8000
+# run the backend separately: uvicorn backend.app:app  (from repo root)
+```
+
+- **`src/sse.ts`** — reads a fetch `ReadableStream` and parses `data:` frames.
+  Used for both the ingest progress (GET) and message (POST) streams, since
+  `EventSource` can't do POST.
+- **`src/api.ts`** — typed client (`listChats`, `getChat`, `createChat`,
+  `renameChat`, `deleteChat`, `streamIngest`, `streamMessage`).
+- **Components:** `Sidebar` (chat list + status dots, rename/delete), `NewChatModal`
+  (URL + time range, client-side validation mirroring `src/validators.py`),
+  `IngestProgress` (SSE stepper: download → audio → transcribe → chunk → index),
+  `ChatView` (loads detail; shows ingest progress until `ready`, then the chat),
+  `MessageList` (bubbles + citation chips), `Composer`.
+- **Streaming UX:** on send, an optimistic user bubble + an empty assistant bubble
+  ("Searching the transcript…") are added; `token` events append text live, `done`
+  finalizes content + citations. Vite dev-server proxy keeps it same-origin.
+- Build/type-check: `npm run build` (`tsc --noEmit && vite build`).
+
 ## Notes
-- `test.py` is throwaway scratch (git-ignored) with hard-coded paths — **not** the app entry point. Use `main.py` (CLI) or the FastAPI backend.
+- `test.py` is throwaway scratch (git-ignored) with hard-coded paths — **not** the app entry point. Use `main.py` (CLI), the FastAPI backend, or the frontend.
