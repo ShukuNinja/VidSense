@@ -2,14 +2,14 @@ import subprocess
 
 from src import validators
 import os 
-from src.constants import AUDIO_FOLDER
+from src.constants import AUDIO_FOLDER, DEFAULT_AUDIO_FORMAT
 from src.file_utils import get_unique_filepath
 
 
 
 def extract_audio(clip_path):
     audio_filename, _ = os.path.splitext(os.path.basename(clip_path))
-    audio_path = get_unique_filepath(audio_filename, AUDIO_FOLDER, ".wav")
+    audio_path = get_unique_filepath(audio_filename, AUDIO_FOLDER, f".{DEFAULT_AUDIO_FORMAT}")
     
     cmd = [
     "ffmpeg",

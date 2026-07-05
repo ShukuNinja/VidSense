@@ -7,7 +7,7 @@ CHUNK_FOLDER = "data/chunks"
 
 # FFmpeg Settings
 DEFAULT_VIDEO_FORMAT = "mp4"
-DEFAULT_AUDIO_FORMAT = "mp3"
+DEFAULT_AUDIO_FORMAT = "wav"
 
 # YouTube Settings
 DEFAULT_LANGUAGE = "en"
