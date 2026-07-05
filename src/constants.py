@@ -1,3 +1,5 @@
+import os
+
 # Folder Paths
 AUDIO_FOLDER = "data/audio"
 VIDEO_FOLDER = "data/videos"
@@ -155,7 +157,7 @@ NO_EVIDENCE_RESPONSE = (
     "information to answer this question."
 )
 
-MODEL_NAME = "llama3.2:3b"
+MODEL_NAME = os.getenv("VIDSENSE_MODEL", "llama3.2:3b")
 
 # Controls Ollama's `think` request option:
 #   None  -> don't send the param (for non-reasoning models like llama3.2)

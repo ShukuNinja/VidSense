@@ -1,0 +1,37 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: vidsense-ollama
+    volumes:
+      - ollama-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    # GPU passthrough for the LLM. Requires the NVIDIA Container Toolkit on the
+    # host. Remove this `deploy` block to run the LLM on CPU (much slower).
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  app:
+    build: .
+    container_name: vidsense-app
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      VIDSENSE_MODEL: llama3.2:3b
+      FRONTEND_DIST: /app/frontend/dist
+    volumes:
+      - vidsense-data:/app/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  ollama-models:   # pulled models persist here
+  vidsense-data:   # clips, transcripts, indexes, SQLite DB

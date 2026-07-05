@@ -192,5 +192,18 @@ npm run dev          # http://localhost:5173 ; proxies /api -> 127.0.0.1:8000
   finalizes content + citations. Vite dev-server proxy keeps it same-origin.
 - Build/type-check: `npm run build` (`tsc --noEmit && vite build`).
 
+## Deployment (`Dockerfile`, `docker-compose.yml`, `DEPLOY.md`)
+
+Containerized as two services: **`ollama`** (LLM on GPU) and **`app`** (FastAPI serving
+API + built SPA, CPU — Whisper/embeddings run on CPU there). One command:
+`docker compose up -d --build` → open `http://<host>:8000`. Still single-user (no auth).
+
+- The backend **serves the built frontend** when `FRONTEND_DIST` points at a real `dist/`
+  (mounted at `/` after the `/api` routes); in dev that dir is absent and Vite serves it.
+- Config via env: `VIDSENSE_MODEL` (→ `MODEL_NAME`), `OLLAMA_HOST` (read by the ollama
+  client), `FRONTEND_DIST`. See `DEPLOY.md` for GPU prerequisites and caveats.
+- `docker/entrypoint.sh` waits for Ollama, pulls the model, then starts uvicorn.
+
 ## Notes
 - `test.py` is throwaway scratch (git-ignored) with hard-coded paths — **not** the app entry point. Use `main.py` (CLI), the FastAPI backend, or the frontend.
+- `requirements.txt` is UTF-8 (was UTF-16, which breaks `pip`); it now also pins `ollama`.
