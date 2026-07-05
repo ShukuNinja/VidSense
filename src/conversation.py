@@ -1,7 +1,7 @@
 import re
 
-from src.llm import chat as llm_chat
-from src.constants import MAX_HISTORY_TURNS
+from src.ollama_manager import chat_with_retry
+from src.constants import MODEL_NAME, MAX_HISTORY_TURNS
 
 # Whole-clip / overview questions that similarity search can't retrieve (they
 # aren't about any single chunk). Detected so they can be answered from the
@@ -80,14 +80,14 @@ def contextualize_query(query, history):
     )
 
     try:
-        raw = _strip_think(
-            llm_chat(
-                [
-                    {"role": "system", "content": CONTEXTUALIZE_SYSTEM},
-                    {"role": "user", "content": user_content},
-                ]
-            )
+        response = chat_with_retry(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": CONTEXTUALIZE_SYSTEM},
+                {"role": "user", "content": user_content},
+            ],
         )
+        raw = _strip_think(response["message"]["content"])
     except Exception:
         # If the reformulation step fails, fall back to a safe self-contained answer.
         return query, False

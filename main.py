@@ -1,7 +1,7 @@
 from src.youtube_utils import get_user_input
 from src.console_utils import print_header, print_success, print_error, output_file
 from src.pipeline import ingest_video, answer_question, ConsoleReporter
-from src.llm import health_check
+from src.ollama_manager import check_ollama_health
 from src.errors import PipelineError
 
 
@@ -79,14 +79,10 @@ def main():
         return
     chunk_data, index = ingested
 
-    print_header("Checking LLM...")
-    ok, message = health_check()
-    if not ok:
-        print_error()
-        if message:
-            print(f"    {message}")
+    print_header("Checking Ollama...")
+    if not check_ollama_health():
         print("    Skipping the question stage. Your index has been saved and")
-        print("    can be queried later once the LLM is available.")
+        print("    can be queried later once Ollama is available.")
         return
     print_success()
 
