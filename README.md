@@ -10,7 +10,7 @@ Everything — transcription, embeddings, retrieval, and the language model — 
 **local models**, on a laptop GPU. That constraint shaped the whole project, and a lot of
 this README is about what I learned because of it.
 
-> **Live demo:** https://scholar-fretful-hurry.ngrok-free.dev
+> **Live demo:** 
 > *(Self-hosted from a personal machine over a tunnel — it's up when the host is online.)*
 
 ---
