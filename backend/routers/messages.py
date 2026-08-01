@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from src.pipeline import stream_answer_question
+from src.services.pipeline import stream_answer_question
 
 from backend.database import SessionLocal
 from backend.models import Chat, Message, User

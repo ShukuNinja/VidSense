@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from src import validators
+from src.core import validators
 
 from backend.database import SessionLocal, get_db
 from backend.models import Chat, User

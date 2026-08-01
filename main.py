@@ -1,8 +1,7 @@
-from src.youtube_utils import get_user_input
-from src.console_utils import print_header, print_success, print_error, output_file
-from src.pipeline import ingest_video, answer_question, ConsoleReporter
-from src.ollama_manager import check_ollama_health
-from src.errors import PipelineError
+from src.ingestion.youtube_utils import get_user_input
+from src.utils.console import print_header, print_success, print_error, output_file
+from src.services.pipeline import ingest_video, answer_question, ConsoleReporter
+from src.core.errors import PipelineError
 
 
 def ingest_clip():

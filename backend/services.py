@@ -2,11 +2,11 @@ import threading
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
-from src.errors import PipelineError
-from src.youtube_utils import prepare_source
-from src.pipeline import ingest_video, ProgressReporter
-from src.embedder import load_chunk_data
-from src.indexer import load_faiss_index
+from src.core.errors import PipelineError
+from src.ingestion.youtube_utils import prepare_source
+from src.services.pipeline import ingest_video, ProgressReporter
+from src.retrieval.embedder import load_chunk_data
+from src.retrieval.indexer import load_faiss_index
 
 from backend.database import SessionLocal
 from backend.models import Chat

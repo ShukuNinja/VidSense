@@ -1,4 +1,4 @@
-from src.youtube_utils import get_video_id
+from src.ingestion.youtube_utils import get_video_id
 
 
 def _to_seconds(value):
