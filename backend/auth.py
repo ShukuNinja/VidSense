@@ -97,17 +97,23 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         method="POST",
     )
 
+    # Debug prints for development diagnosis. These avoid printing secrets but
+    # make it straightforward to see whether the HTTP call was attempted and
+    # what the outcome was.
+    print("Brevo: sending email request to API endpoint...")
     try:
         with urllib.request.urlopen(request, timeout=10) as response:
-            # Small debug visibility for dev: print the numeric HTTP status so it's
-            # easy to tell whether Brevo accepted the request. Avoid printing any
-            # sensitive headers or response body.
             try:
                 print(f"Brevo API response status: {response.status}")
             except Exception:
                 pass
             return response.status < 400
     except urllib.error.URLError as exc:
+        # Print the error message to server logs to help diagnose account/sender problems
+        try:
+            print(f"Brevo API error: {exc}")
+        except Exception:
+            pass
         raise RuntimeError(f"Brevo email delivery failed: {exc}") from exc
 
 
