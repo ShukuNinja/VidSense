@@ -1,10 +1,34 @@
 import os
+from pathlib import Path
+
+# Development convenience: load .env into os.environ so running uvicorn from a
+# shell picks up variables defined in a local .env file. This is safe for local
+# dev only — production should set environment variables explicitly.
+def _load_dotenv_file(path: str = ".env") -> None:
+    p = Path(path)
+    if not p.is_file():
+        return
+    for raw in p.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        key = key.strip()
+        val = val.strip().strip('"').strip("'")
+        # Don't overwrite existing environment variables
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+# Load local .env early so other modules that call os.getenv get the values.
+_load_dotenv_file()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.database import Base, engine
+from backend.database import Base, engine, ensure_user_otp_columns
 from backend import models  # noqa: F401 — ensure models are registered before create_all
 from backend.routers import auth, chats, messages
 
@@ -15,6 +39,7 @@ FRONTEND_DIST = os.getenv("FRONTEND_DIST", "frontend/dist")
 
 def create_app() -> FastAPI:
     Base.metadata.create_all(bind=engine)
+    ensure_user_otp_columns()
 
     app = FastAPI(title="VidSense API")
 
