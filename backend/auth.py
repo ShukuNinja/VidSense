@@ -20,6 +20,9 @@ from backend.models import User
 SECRET = os.getenv("VIDSENSE_SECRET", "dev-insecure-secret-change-me-in-production-0000")
 ALGORITHM = "HS256"
 TOKEN_TTL_SECONDS = 7 * 24 * 3600  # 7 days
+# Read-only module defaults — note: send_otp_email reads the live environment
+# at call time so updates to env (or .env reloading) are picked up without
+# requiring a module re-import in dev.
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "no-reply@vidsense.local")
 BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "VidSense")
