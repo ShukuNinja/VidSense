@@ -1,3 +1,0 @@
-- [x] Inspect the existing auth flow and identify the frontend changes needed for OTP verification.
-- [x] Update the frontend auth UI to support registration -> OTP verification -> login.
-- [x] Validate the frontend build and verify the new flow compiles successfully.
