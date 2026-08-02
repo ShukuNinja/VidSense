@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   email: string;
+  is_verified?: boolean;
 }
 
 export type ChatStatus = "pending" | "ingesting" | "ready" | "failed";

@@ -8,6 +8,15 @@ class AuthRequest(BaseModel):
     password: str
 
 
+class OTPVerifyRequest(BaseModel):
+    email: str
+    otp_code: str
+
+
+class OTPResendRequest(BaseModel):
+    email: str
+
+
 class ChatCreate(BaseModel):
     url: str
     start_time: str

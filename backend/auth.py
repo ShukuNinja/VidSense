@@ -68,57 +68,71 @@ def create_or_refresh_otp(user: User) -> str:
     user.otp_expires_at = _utc_now() + datetime.timedelta(minutes=OTP_TTL_MINUTES)
     return otp_code
 
+import requests
 
 def send_otp_email(to_email: str, otp_code: str) -> bool:
-    if not BREVO_API_KEY or BREVO_SENDER_EMAIL == "no-reply@vidsense.local":
-        print(
-            "BREVO_API_KEY or BREVO_SENDER_EMAIL is not configured; skipping OTP email delivery."
-        )
+    api_key = os.getenv("BREVO_API_KEY", "").strip()
+    sender_email = os.getenv("BREVO_SENDER_EMAIL", "").strip()
+    sender_name = os.getenv("BREVO_SENDER_NAME", "VidSense").strip()
+
+    print("=" * 60)
+    print("API KEY:", repr(api_key))
+    print("SENDER :", repr(sender_email))    
+    print("=" * 60)
+
+    if not api_key or not sender_email:
+        print("Brevo credentials are missing.")
         return True
 
     payload = {
-        "sender": {"name": BREVO_SENDER_NAME, "email": BREVO_SENDER_EMAIL},
-        "to": [{"email": to_email}],
-        "subject": "Verify your VidSense account",
-        "htmlContent": (
-            f"<p>Your VidSense verification code is <strong>{otp_code}</strong>.</p>"
-            f"<p>This code expires in {OTP_TTL_MINUTES} minutes.</p>"
-        ),
-        "textContent": (
-            f"Your VidSense verification code is {otp_code}. "
-            f"This code expires in {OTP_TTL_MINUTES} minutes."
-        ),
+    "sender": {
+        "name": sender_name,
+        "email": sender_email,
+    },
+    "to": [
+        {
+            "email": to_email,
+        }
+    ],
+    "subject": "Verify your VidSense account",
+    "htmlContent": (
+        f"<p>Your VidSense verification code is "
+        f"<strong>{otp_code}</strong>.</p>"
+        f"<p>This code expires in {OTP_TTL_MINUTES} minutes.</p>"
+    ),
+    "textContent": (
+        f"Your VidSense verification code is {otp_code}. "
+        f"This code expires in {OTP_TTL_MINUTES} minutes."
+    ),
+}
+
+
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json",
     }
 
-    request = urllib.request.Request(
+    print("=" * 60)
+    print("BREVO DEBUG")
+    print("API Key Prefix:", api_key[:15] + "...")
+    print("Sender:", sender_email)
+    print("Recipient:", to_email)
+    print("=" * 60)
+
+    response = requests.post(
         "https://api.brevo.com/v3/smtp/email",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "api-key": BREVO_API_KEY,
-        },
-        method="POST",
+        headers=headers,
+        json=payload,
+        timeout=10,
     )
 
-    # Debug prints for development diagnosis. These avoid printing secrets but
-    # make it straightforward to see whether the HTTP call was attempted and
-    # what the outcome was.
-    print("Brevo: sending email request to API endpoint...")
-    try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            try:
-                print(f"Brevo API response status: {response.status}")
-            except Exception:
-                pass
-            return response.status < 400
-    except urllib.error.URLError as exc:
-        # Print the error message to server logs to help diagnose account/sender problems
-        try:
-            print(f"Brevo API error: {exc}")
-        except Exception:
-            pass
-        raise RuntimeError(f"Brevo email delivery failed: {exc}") from exc
+    print("Status:", response.status_code)
+    print("Body:", response.text)
 
+    response.raise_for_status()
+
+    return True
 
 def verify_otp(user: User, otp_code: str) -> bool:
     if not user.otp_code or not user.otp_expires_at:

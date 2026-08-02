@@ -12,16 +12,17 @@ async function request(path: string, options: RequestInit = {}): Promise<any> {
     handleUnauthorized();
     throw new Error("Session expired. Please sign in again.");
   }
+
   if (!res.ok) {
     let detail = res.statusText;
     try {
       const body = await res.json();
       detail = body.detail || detail;
-    } catch {
-      // keep statusText
-    }
+    } catch {}
+
     throw new Error(detail);
   }
+
   return res.status === 204 ? null : res.json();
 }
 
@@ -33,17 +34,59 @@ function jsonPost(body: unknown): RequestInit {
   };
 }
 
-// ---- auth ----
-export async function register(email: string, password: string): Promise<User> {
-  const r = await request("/auth/register", jsonPost({ email, password }));
-  setToken(r.access_token);
-  return r.user;
+export interface AuthRegisterResponse {
+  message: string;
+  email: string;
+  requires_verification: boolean;
+  user: User;
+}
+
+export interface AuthVerifyResponse {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
+}
+
+export interface AuthResendResponse {
+  message: string;
+  email: string;
+  requires_verification: boolean;
+}
+
+export async function register(email: string, password: string): Promise<AuthRegisterResponse> {
+  return request("/auth/register", jsonPost({ email, password }));
+}
+
+export async function verifyOtp(
+  email: string,
+  otpCode: string
+): Promise<AuthVerifyResponse> {
+  return request(
+    "/auth/verify-otp",
+    jsonPost({
+      email,
+      otp_code: otpCode,
+    })
+  );
+}
+
+export async function resendOtp(email: string): Promise<AuthResendResponse> {
+  return request("/auth/resend-otp", jsonPost({ email }));
 }
 
 export async function login(email: string, password: string): Promise<User> {
-  const r = await request("/auth/login", jsonPost({ email, password }));
-  setToken(r.access_token);
-  return r.user;
+  const payload = await request("/auth/login", jsonPost({ email, password })) as AuthVerifyResponse;
+
+  setToken(payload.access_token);
+
+  return payload.user;
+}
+
+export function finishVerification(
+  payload: AuthVerifyResponse
+): User {
+  setToken(payload.access_token);
+  return payload.user;
 }
 
 export function me(): Promise<User> {
@@ -51,6 +94,7 @@ export function me(): Promise<User> {
 }
 
 // ---- chats ----
+
 export function listChats(): Promise<Chat[]> {
   return request("/chats");
 }
@@ -80,16 +124,15 @@ export function deleteChat(id: number): Promise<void> {
   return request(`/chats/${id}`, { method: "DELETE" });
 }
 
-// ---- streams (auth header injected inside streamEvents) ----
 export function streamIngest(
   id: number,
   onEvent: (data: any) => void,
-  signal: AbortSignal,
+  signal: AbortSignal
 ): Promise<void> {
   return streamEvents(
     `${BASE}/chats/${id}/ingest/stream`,
     { method: "GET", signal },
-    onEvent,
+    onEvent
   );
 }
 
@@ -97,7 +140,7 @@ export function streamMessage(
   id: number,
   content: string,
   onEvent: (event: StreamEvent) => void,
-  signal: AbortSignal,
+  signal: AbortSignal
 ): Promise<void> {
   return streamEvents(
     `${BASE}/chats/${id}/messages`,
@@ -107,6 +150,6 @@ export function streamMessage(
       body: JSON.stringify({ content }),
       signal,
     },
-    onEvent,
+    onEvent
   );
 }
